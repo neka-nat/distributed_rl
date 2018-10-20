@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+"6aeadf3" = {file = "http://download.pytorch.org/whl/cu92/torch-0.4.1-cp36-cp36m-linux_x86_64.whl"}
+redis = "*"
+pillow = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
