@@ -6,8 +6,7 @@ from libs import utils
 class ReplayMemory(object):
     def __init__(self, capacity):
         self.capacity = capacity
-        self.memory = []
-        self.position = 0
+        self.clear()
 
     def push(self, *args):
         """Saves a transition."""
@@ -18,6 +17,10 @@ class ReplayMemory(object):
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
+
+    def clear(self):
+        self.memory = []
+        self.position = 0
 
     def __len__(self):
         return len(self.memory)

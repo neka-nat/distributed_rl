@@ -48,6 +48,7 @@ class Actor(object):
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples, detach=True)
                 self._connect.rpush('experience', cPickle.dumps((samples, prio))
+                self._local_memory.clear()
 
             if t % self._target_update == 0:
                 params = self._connect.get('params')
