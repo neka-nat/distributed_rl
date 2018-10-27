@@ -28,6 +28,10 @@ Edit /etc/redis/redis.conf
 ## Run
 
 ```
+python -m visdom.server
+```
+
+```
 python learner.py
 ```
 

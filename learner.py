@@ -23,12 +23,13 @@ class Learner(object):
         self._memory = replay.Replay(50000, self._connect)
         self._memory.run()
 
-    def optimize_loop(batch_size, gamma=0.999, beta=0.4, fit_timing=50):
+    def optimize_loop(batch_size, beta=0.4, fit_timing=50):
         for t in count():
             if len(memory) < batch_size:
                 return
             transitions, indices = memory.sample(batch_size)
-            delta, prio = self._policy_net.calc_priorities(self._target_net, transitions)
+            delta, prio = self._policy_net.calc_priorities(self._target_net,
+                                                           transitions, device=device)
             total = len(self._memory)
             weights = (total * prio) ** (-beta)
             weights /= weights.max()

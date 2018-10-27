@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from libs import utils
 
 class DuelingDQN(nn.Module):
     def __init__(self, n_action, input_shape=(4, 84, 84)):
@@ -9,8 +10,8 @@ class DuelingDQN(nn.Module):
         self.conv1 = nn.Conv2d(input_shape[0], 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        r = int((int(input_shape[0] / 4) - 1) / 2) - 3
-        c = int((int(input_shape[1] / 4) - 1) / 2) - 3
+        r = int((int(input_shape[1] / 4) - 1) / 2) - 3
+        c = int((int(input_shape[2] / 4) - 1) / 2) - 3
         self.adv1 = nn.Linear(r * c * 64, 512)
         self.adv2 = nn.Linear(512, self.n_action)
         self.val1 = nn.Linear(r * c * 64, 512)
@@ -27,7 +28,9 @@ class DuelingDQN(nn.Module):
         val = self.val2(val)
         return val + adv - adv.mean()
 
-    def calc_priorities(self, target_net, transitions, alpha=0.6, detach=False):
+    def calc_priorities(self, target_net, transitions, alpha=0.6, gamma=0.999,
+                        detach=False,
+                        device=torch.device("cpu")):
         batch = utils.Transition(*zip(*transitions))
 
         next_state_batch = torch.stack(batch.next_state).to(device)
