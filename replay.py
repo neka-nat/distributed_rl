@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+import sys
 import threading
-import cPickle
+if sys.version_info.major == 3:
+    import _pickle as cPickle
+else:
+    import cPickle
 import numpy as np
 from libs import replay_memory, utils
 

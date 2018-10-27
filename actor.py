@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import sys
 import gym
 import numpy as np
 from itertools import count
-import cPickle
+if sys.version_info.major == 3:
+    import _pickle as cPickle
+else:
+    import cPickle
 import redis
 import torch
 import visdom
@@ -47,7 +51,7 @@ class Actor(object):
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples, detach=True)
-                self._connect.rpush('experience', cPickle.dumps((samples, prio))
+                self._connect.rpush('experience', cPickle.dumps((samples, prio)))
                 self._local_memory.clear()
 
             if t % self._target_update == 0:
