@@ -52,10 +52,10 @@ class Actor(object):
             state = next_state.copy()
             sum_rwd += reward.numpy()
             if done:
+                vis.line(X=np.array([n_episode]), Y=np.array([sum_rwd]), win=self._win2, update='append')
                 state = self._env.reset()
                 sum_rwd = 0
                 n_episode += 1
-                vis.line(X=np.array([n_episode]), Y=np.array([sum_rwd]), win=self._win2, update='append')
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples,
