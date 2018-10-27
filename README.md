@@ -2,6 +2,8 @@
 
 This is pytorch implementation of distributed deep reinforcement learning.
 
+* [ape-x](https://arxiv.org/abs/1803.00933)
+
 ## Install
 
 ```
