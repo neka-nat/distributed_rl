@@ -8,7 +8,6 @@ This is pytorch implementation of distributed deep reinforcement learning.
 
 ```
 pipenv install
-pipenv shell
 ```
 
 ```
@@ -30,5 +29,6 @@ Edit /etc/redis/redis.conf
 ## Run
 
 ```
+pipenv shell
 ./run.sh <number of actors>
 ```
