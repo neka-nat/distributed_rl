@@ -30,13 +30,5 @@ Edit /etc/redis/redis.conf
 ## Run
 
 ```
-python -m visdom.server
-```
-
-```
-python learner.py
-```
-
-```
-python actor.py
+./run.sh <number of actors>
 ```
