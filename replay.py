@@ -10,18 +10,19 @@ import numpy as np
 from libs import replay_memory, utils
 
 class Replay(threading.Thread):
-    def __init__(self, size=20000, connect=redis.StrictRedis(host='localhost')):
+    def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost')):
+        super(Replay, self).__init__()
+        self.setDaemon(True)
         self._memory = replay_memory.PrioritizedMemory(size)
         self._connect = connect
         self._connect.delete('experience')
         self._lock = threading.Lock()
-        self._timeout = 0
 
     def run(self):
         while True:
-            data = self._connect.blpop('experience', self._timeout)
+            data = self._connect.lpop('experience')
             if not data is None:
-                trans, prios = cPickle.loads(data[1])
+                trans, prios = cPickle.loads(data)
                 with self._lock:
                     self._memory.push(trans, prios)
 
@@ -31,3 +32,9 @@ class Replay(threading.Thread):
     def remove_to_fit(self):
         with self._lock:
             self._memory.remove_to_fit()
+
+    def sample(self, batch_size):
+        return self._memory.sample(batch_size)
+
+    def __len__(self):
+        return len(self._memory)

@@ -61,7 +61,8 @@ class Actor(object):
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples,
                                                            detach=True, device=device)
                 print("[%s] Publish experience." % self._name)
-                self._connect.rpush('experience', cPickle.dumps((samples, prio)))
+                self._connect.rpush('experience',
+                                    cPickle.dumps((samples, prio.squeeze(1).detach().cpu().numpy().tolist())))
                 self._local_memory.clear()
 
             if t % self._target_update == 0:

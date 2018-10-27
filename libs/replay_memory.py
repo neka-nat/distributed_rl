@@ -30,8 +30,8 @@ class PrioritizedMemory(object):
     def __init__(self, capacity, alpha=0.6):
         self.alpha = alpha
         self.capacity = capacity
-        self.transitions = []
-        self.priorities = []
+        self.transitions = deque()
+        self.priorities = deque()
         self.total_probs = 0.0
     
     def push(self, transitions, priorities):
@@ -42,7 +42,7 @@ class PrioritizedMemory(object):
     def sample(self, batch_size):
         batch = []
         idxs = []
-        seg = self.total_probs / n
+        seg = self.total_probs / batch_size
 
         idx = -1
         sum_p = 0
@@ -52,7 +52,7 @@ class PrioritizedMemory(object):
                 sum_p += self.priorities[idx]
                 idx += 1
             idxs.append(idx)
-            batch.append(self.transition[idx])
+            batch.append(self.transitions[idx])
         return batch, idxs
     
     def update_priorities(self, indices, priorities):
@@ -61,7 +61,9 @@ class PrioritizedMemory(object):
             self.priorities[idx] = prio
 
     def remove_to_fit(self):
-         for _ in range(len(self.priorities) - self.capacity):
+        if len(self.priorities) - self.capacity <= 0:
+            return
+        for _ in range(len(self.priorities) - self.capacity):
             self.transition.popleft()
             p = self.priorities.popleft()
             self.total_probs -= p
