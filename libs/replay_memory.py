@@ -35,7 +35,7 @@ class PrioritizedMemory(object):
         self.total_probs = 0.0
     
     def push(self, transitions, priorities):
-        self.memory.extend(transitions)
+        self.transitions.extend(transitions)
         self.priorities.extend(priorities)
         self.total_probs += sum(priorities)
         
@@ -67,4 +67,4 @@ class PrioritizedMemory(object):
             self.total_probs -= p
 
     def __len__(self):
-        return len(self.memory)
+        return len(self.transitions)

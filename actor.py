@@ -26,11 +26,12 @@ class Actor(object):
         self._eps_decay = eps_decay
         self._policy_net = models.DuelingDQN(self._env.action_space.n).to(device)
         self._target_net = models.DuelingDQN(self._env.action_space.n).to(device)
+        self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._win1 = vis.image(utils.preprocess(self._env.env._get_image()))
         self._win2 = vis.line(X=np.array([0]), Y=np.array([0.0]),
                               opts=dict(title='Score %s' % self._name))
-        self._local_memory = replay_memory.ReplayMemory(5000)
+        self._local_memory = replay_memory.ReplayMemory(1000)
         self._connect = redis.StrictRedis(host=hostname)
 
     def run(self):
@@ -59,12 +60,14 @@ class Actor(object):
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples,
                                                            detach=True, device=device)
+                print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience', cPickle.dumps((samples, prio)))
                 self._local_memory.clear()
 
             if t % self._target_update == 0:
                 params = self._connect.get('params')
                 if not params is None:
+                    print("[%s] Sync params." % self._name)
                     self._policy_net.load_state_dict(cPickle.loads(params))
                     self._target_net.load_state_dict(self._policy_net.state_dict())
 

@@ -1,29 +1,33 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from itertools import count
-
+if sys.version_info.major == 3:
+    import _pickle as cPickle
+else:
+    import cPickle
+import redis
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 import visdom
-from libs import utils, models
+from libs import utils, models, wrapped_env
 import replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vis = visdom.Visdom()
 
 class Learner(object):
-    def __init__(self, hostname='localhost'):
-        self._policy_net = models.DuelingDQN(env.action_space.n).to(device)
-        self._target_net = models.DuelingDQN(env.action_space.n).to(device)
-        self._target_net.load_state_dict(policy_net.state_dict())
+    def __init__(self, n_action, hostname='localhost'):
+        self._policy_net = models.DuelingDQN(n_action).to(device)
+        self._target_net = models.DuelingDQN(n_action).to(device)
+        self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
         self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=0.01)
-        self._memory = replay.Replay(50000, self._connect)
+        self._memory = replay.Replay(20000, self._connect)
         self._memory.run()
 
-    def optimize_loop(batch_size, beta=0.4, fit_timing=50):
+    def optimize_loop(batch_size, beta=0.4, fit_timing=50, target_update=50):
         for t in count():
             if len(memory) < batch_size:
                 return
@@ -44,6 +48,14 @@ class Learner(object):
             self._memory.update_priorities(indices, prio.data.cpu().numpy())
             self._optimizer.step()
 
+            self._connect.set('params', cPickle.dumps(self._policy_net.state_dict())
+            if t % fit_timing == 0:
+                self._memory.remove_to_fit()
+            if t % target_update == 0:
+                self._target_net.load_state_dict(self._policy_net.state_dict())
+
 if __name__ == '__main__':
-    learner = Learner()
+    import gym
+    env = gym.make('MultiFrameBreakout-v0')
+    learner = Learner(env.action_space.n)
     learner.optimize_loop()
