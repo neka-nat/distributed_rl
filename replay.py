@@ -6,8 +6,7 @@ if sys.version_info.major == 3:
 else:
     import cPickle
 import redis
-import numpy as np
-from libs import replay_memory, utils
+from libs import replay_memory
 
 class Replay(threading.Thread):
     def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost')):

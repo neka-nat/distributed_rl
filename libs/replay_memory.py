@@ -5,30 +5,24 @@ from libs import utils
 
 class ReplayMemory(object):
     def __init__(self, capacity):
-        self.capacity = capacity
-        self.clear()
+        self.memory = deque(maxlen=capacity)
 
     def push(self, *args):
         """Saves a transition."""
-        if len(self.memory) < self.capacity:
-            self.memory.append(None)
-        self.memory[self.position] = utils.Transition(*args)
-        self.position = (self.position + 1) % self.capacity
+        self.memory.append(utils.Transition(*args))
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
 
     def clear(self):
-        self.memory = []
-        self.position = 0
+        self.memory.clear()
 
     def __len__(self):
         return len(self.memory)
 
 
 class PrioritizedMemory(object):
-    def __init__(self, capacity, alpha=0.6):
-        self.alpha = alpha
+    def __init__(self, capacity):
         self.capacity = capacity
         self.transitions = deque()
         self.priorities = deque()
@@ -64,7 +58,7 @@ class PrioritizedMemory(object):
         if len(self.priorities) - self.capacity <= 0:
             return
         for _ in range(len(self.priorities) - self.capacity):
-            self.transition.popleft()
+            self.transitions.popleft()
             p = self.priorities.popleft()
             self.total_probs -= p
 

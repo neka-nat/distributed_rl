@@ -9,9 +9,8 @@ else:
 import redis
 import torch
 import torch.optim as optim
-import torch.nn.functional as F
 import visdom
-from libs import utils, models, wrapped_env
+from libs import models, wrapped_env
 import replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -25,7 +24,9 @@ class Learner(object):
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
         self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=0.01)
-        self._memory = replay.Replay(50000, self._connect)
+        self._win = vis.line(X=np.array([0]), Y=np.array([0]),
+                             opts=dict(title='Memory size'))
+        self._memory = replay.Replay(30000, self._connect)
         self._memory.start()
 
     def optimize_loop(self, batch_size=32, beta=0.4, fit_timing=50, target_update=50):
@@ -54,6 +55,8 @@ class Learner(object):
             if t % fit_timing == 0:
                 print('[Learner] Remove to fit.')
                 self._memory.remove_to_fit()
+                vis.line(X=np.array([t]), Y=np.array([len(self._memory)]),
+                         win=self._win, update='append')
             if t % target_update == 0:
                 self._target_net.load_state_dict(self._policy_net.state_dict())
 
