@@ -37,10 +37,9 @@ class Learner(object):
             delta, prio = self._policy_net.calc_priorities(self._target_net,
                                                            transitions, device=device)
             total = len(self._memory)
-            weights = (total * prio) ** (-beta)
-            weights = weights / weights.max()
-            weights = weights.to(device)
-            loss = (delta * weights.unsqueeze(1)).mean()
+            weights = (total * prio.cpu().numpy()) ** (-beta)
+            weights /= weights.max()
+            loss = (delta * torch.from_numpy(np.expand_dims(weights, 1)).to(device)).mean()
 
             # Optimize the model
             self._optimizer.zero_grad()
@@ -48,7 +47,7 @@ class Learner(object):
             for param in self._policy_net.parameters():
                 param.grad.data.clamp_(-1, 1)
             self._memory.update_priorities(indices,
-                                           prio.squeeze(1).detach().cpu().numpy().tolist())
+                                           prio.squeeze(1).cpu().numpy().tolist())
             self._optimizer.step()
 
             self._connect.set('params', cPickle.dumps(self._policy_net.state_dict()))

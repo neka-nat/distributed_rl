@@ -46,4 +46,4 @@ class DuelingDQN(nn.Module):
         if detach:
             delta = delta.detach()
         prios = delta.pow(alpha)
-        return delta, prios
+        return delta, prios.detach()

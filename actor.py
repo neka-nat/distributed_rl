@@ -62,7 +62,7 @@ class Actor(object):
                                                            detach=True, device=device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',
-                                    cPickle.dumps((samples, prio.squeeze(1).detach().cpu().numpy().tolist())))
+                                    cPickle.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))
                 self._local_memory.clear()
 
             if t % self._target_update == 0:
