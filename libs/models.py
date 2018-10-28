@@ -40,7 +40,8 @@ class DuelingDQN(nn.Module):
         done_batch = torch.stack(batch.done).to(device)
 
         state_action_values = self.forward(state_batch).gather(1, action_batch)
-        next_state_values = target_net(next_state_batch).max(1)[0].unsqueeze(1).detach()
+        next_action = self.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
+        next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
         expected_state_action_values = (next_state_values * gamma * (1.0 - done_batch)) + reward_batch
         delta = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
         if detach:
