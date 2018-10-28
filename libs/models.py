@@ -45,5 +45,5 @@ class DuelingDQN(nn.Module):
         delta = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
         if detach:
             delta = delta.detach()
-        prios = delta.pow(alpha)
+        prios = (delta.abs() + 1e-5).pow(alpha)
         return delta, prios.detach()

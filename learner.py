@@ -23,13 +23,13 @@ class Learner(object):
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
-        self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=0.01)
+        self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=1.5e-7)
         self._win = vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
         self._memory = replay.Replay(30000, self._connect)
         self._memory.start()
 
-    def optimize_loop(self, batch_size=32, beta=0.4, fit_timing=50, target_update=50):
+    def optimize_loop(self, batch_size=512, beta=0.4, fit_timing=100, target_update=1000):
         for t in count():
             if len(self._memory) < batch_size:
                 continue
