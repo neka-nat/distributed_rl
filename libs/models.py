@@ -26,7 +26,7 @@ class DuelingDQN(nn.Module):
         adv = self.adv2(adv)
         val = F.relu(self.val1(x))
         val = self.val2(val)
-        return val + adv - adv.mean()
+        return val + adv - adv.mean(1, keepdim=True)
 
     def calc_priorities(self, target_net, transitions, alpha=0.6, gamma=0.999,
                         detach=False,
