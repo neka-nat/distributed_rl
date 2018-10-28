@@ -3,6 +3,7 @@ import sys
 import gym
 import numpy as np
 from itertools import count
+from collections import deque
 if sys.version_info.major == 3:
     import _pickle as cPickle
 else:
@@ -31,8 +32,10 @@ class Actor(object):
         self._local_memory = replay_memory.ReplayMemory(1000)
         self._connect = redis.StrictRedis(host=hostname)
 
-    def run(self):
+    def run(self, nstep_return=3, gamma=0.999):
         state = self._env.reset()
+        step_buffer = deque(maxlen=nstep_return)
+        gamma_nsteps = [gamma ** i for i in range(nstep_return + 1)]
         sum_rwd = 0
         n_episode = 0
         for t in count():
@@ -43,8 +46,12 @@ class Actor(object):
             next_state, reward, done, _ = self._env.step(action.item())
             reward = torch.tensor([min(max(-1.0, reward), 1.0)])
             done = torch.tensor([float(done)])
-            self._local_memory.push(torch.from_numpy(state), action,
-                                    torch.from_numpy(next_state), reward, done)
+            step_buffer.append([torch.from_numpy(state), action,
+                                torch.from_numpy(next_state), reward, done])
+            if len(step_buffer) == nstep_return:
+                r_nstep = sum([gamma_nsteps[nstep_return - 1 - i] * step_buffer[i][3] for i in range(nstep_return)])
+                self._local_memory.push(step_buffer[0][0], step_buffer[0][1],
+                                        step_buffer[-1][2], r_nstep, step_buffer[-1][4])
             vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
@@ -53,9 +60,11 @@ class Actor(object):
                 state = self._env.reset()
                 sum_rwd = 0
                 n_episode += 1
+                step_buffer.clear()
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._policy_net, samples,
+                                                           gamma=gamma_nsteps[-1],
                                                            detach=True, device=device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',

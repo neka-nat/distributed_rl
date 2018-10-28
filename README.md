@@ -32,3 +32,7 @@ Edit /etc/redis/redis.conf
 pipenv shell
 ./run.sh <number of actors>
 ```
+
+## Image
+
+![image](images/image.gif)
