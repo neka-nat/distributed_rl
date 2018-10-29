@@ -42,6 +42,13 @@ pipenv shell
 ./run.sh <number of actors>
 ```
 
+## System
+In our system, there are two processes, Actor and Learner.
+In Learner process, thread of the replay memory are running at the same time,
+and these processes are communicating using Redis.
+
+![system](images/system.png)
+
 ## Image
 
 ![image](images/image.gif)
