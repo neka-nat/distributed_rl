@@ -46,12 +46,12 @@ class Actor(object):
             next_state, reward, done, _ = self._env.step(action.item())
             reward = torch.tensor([min(max(-1.0, reward), 1.0)])
             done = torch.tensor([float(done)])
-            step_buffer.append([torch.from_numpy(state), action,
-                                torch.from_numpy(next_state), reward, done])
+            step_buffer.append(utils.Transition(torch.from_numpy(state), action,
+                                                torch.from_numpy(next_state), reward, done))
             if len(step_buffer) == nstep_return:
-                r_nstep = sum([gamma_nsteps[nstep_return - 1 - i] * step_buffer[i][3] for i in range(nstep_return)])
-                self._local_memory.push(step_buffer[0][0], step_buffer[0][1],
-                                        step_buffer[-1][2], r_nstep, step_buffer[-1][4])
+                r_nstep = sum([gamma_nsteps[nstep_return - 1 - i] * step_buffer[i].reward for i in range(nstep_return)])
+                self._local_memory.push(step_buffer[0].state, step_buffer[0].action,
+                                        step_buffer[-1].next_state, r_nstep, step_buffer[-1].done)
             vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
