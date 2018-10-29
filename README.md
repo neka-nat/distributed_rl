@@ -7,6 +7,9 @@ This is pytorch implementation of distributed deep reinforcement learning.
 ## Install
 
 ```
+sudo pip install pipenv
+git clone https://github.com/neka-nat/distributed_rl.git
+cd distributed_rl
 pipenv install
 ```
 
@@ -24,6 +27,12 @@ Edit /etc/redis/redis.conf
 ```
 - stop-writes-on-bgsave-error yes
 + stop-writes-on-bgsave-error no
+```
+
+Restart redis-server
+
+```
+sudo /etc/init.d/redis-server restart
 ```
 
 ## Run
