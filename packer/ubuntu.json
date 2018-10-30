@@ -10,10 +10,12 @@
             "ssh_username": "ubuntu"
         }
     ],
-    "provisioners": [
+    "provisioners":
+    [
         {
             "type": "shell",
-            "inline": [
+            "inline":
+	    [
 		"sudo apt-get -y update",
 		"sudo apt-get -y install git redis-server python3-pip",
 		"sudo pip3 install gym redis pillow atari-py visdom numpy",

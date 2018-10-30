@@ -10,16 +10,15 @@ else:
     import cPickle
 import redis
 import torch
-import visdom
 from libs import replay_memory, utils, wrapped_env, models
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-vis = visdom.Visdom()
 
 class Actor(object):
     EPS_START = 1.0
     EPS_END = 0.1
-    def __init__(self, name, hostname='localhost', batch_size=50, target_update=200, eps_decay=20000):
+    def __init__(self, name, vis, hostname='localhost',
+                 batch_size=50, target_update=200, eps_decay=20000):
         self._env = gym.make('MultiFrameBreakout-v0')
         self._name = name
         self._batch_size = batch_size
@@ -79,8 +78,12 @@ class Actor(object):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Actor for distributed reinforcement.')
+    import visdom
+    parser = argparse.ArgumentParser(description='Actor process for distributed reinforcement.')
     parser.add_argument('-n', '--name', type=str, default='actor1', help='Actor name.')
+    parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
+    parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
     args = parser.parse_args()
-    actor = Actor(args.name)
+    vis = visdom.Visdom(server='http://' + args.visdomserver)
+    actor = Actor(args.name, vis, hostname=args.redisserver)
     actor.run()

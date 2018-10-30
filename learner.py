@@ -9,15 +9,13 @@ else:
 import redis
 import torch
 import torch.optim as optim
-import visdom
 from libs import models, wrapped_env
 import replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-vis = visdom.Visdom()
 
 class Learner(object):
-    def __init__(self, n_action, hostname='localhost'):
+    def __init__(self, n_action, vis, hostname='localhost'):
         self._policy_net = models.DuelingDQN(n_action).to(device)
         self._target_net = models.DuelingDQN(n_action).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
@@ -63,7 +61,14 @@ class Learner(object):
                 self._target_net.load_state_dict(self._policy_net.state_dict())
 
 if __name__ == '__main__':
+    import argparse
     import gym
+    import visdom
+    parser = argparse.ArgumentParser(description='Learner process for distributed reinforcement.')
+    parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
+    parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
+    args = parser.parse_args()
     env = gym.make('MultiFrameBreakout-v0')
-    learner = Learner(env.action_space.n)
+    vis = visdom.Visdom(server='http://' + args.visdomserver)
+    learner = Learner(env.action_space.n, vis, hostname=args.redisserver)
     learner.optimize_loop()
