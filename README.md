@@ -42,6 +42,14 @@ pipenv shell
 ./run.sh <number of actors>
 ```
 
+## Use AWS
+
+Create AMI.
+
+```
+packer build packer/ubuntu.json
+```
+
 ## System
 In our system, there are two processes, Actor and Learner.
 In Learner process, thread of the replay memory runs at the same time,

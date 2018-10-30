@@ -1,0 +1,24 @@
+{
+    "builders":
+    [
+        {
+            "type": "amazon-ebs",
+            "ami_name": "distributed_rl",
+            "region": "us-west-2",
+            "source_ami": "ami-0231c1de0d92fe7a2",
+            "instance_type": "p2.xlarge",
+            "ssh_username": "ubuntu"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+		"sudo apt-get -y update",
+		"sudo apt-get -y install git redis-server python3-pip",
+		"sudo pip3 install gym redis pillow atari-py visdom numpy",
+		"git clone https://github.com/neka-nat/distributed_rl.git"
+	    ]
+        }
+    ]
+}
