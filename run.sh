@@ -9,6 +9,12 @@ echo "visdom server:" $visdom_server
 
 pids=""
 
+if $redis; then
+    redis-server --bind 0.0.0.0 --stop-writes-on-bgsave-error no &
+    pids="$pids $!"
+    sleep 1
+fi
+
 if $visdom; then
     python -m visdom.server -logging_level WARNING &
     pids="$pids $!"

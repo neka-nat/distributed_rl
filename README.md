@@ -32,7 +32,7 @@ Edit /etc/redis/redis.conf
 Restart redis-server
 
 ```
-sudo /etc/init.d/redis-server restart
+sudo service redis restart
 ```
 
 ## Run
