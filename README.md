@@ -4,6 +4,15 @@ This is pytorch implementation of distributed deep reinforcement learning.
 
 * [ape-x](https://arxiv.org/abs/1803.00933)
 
+![image](images/image.gif)
+
+## System
+In our system, there are two processes, Actor and Learner.
+In Learner process, thread of the replay memory runs at the same time,
+and these processes communicate using Redis.
+
+![system](images/system.png)
+
 ## Install
 
 ```
@@ -44,19 +53,32 @@ pipenv shell
 
 ## Use AWS
 
+Set configuration of aws.
+
+```
+aws configure
+# AWS Access Key ID [None]: *********
+# AWS Secret Access Key [None]: *********
+# Default region name [None]: us-west-2
+# Default output format [None]: json
+```
+
 Create AMI.
 
 ```
 packer build packer/ubuntu.json
 ```
 
-## System
-In our system, there are two processes, Actor and Learner.
-In Learner process, thread of the replay memory runs at the same time,
-and these processes communicate using Redis.
+Run instance.
 
-![system](images/system.png)
+```
+aws ec2 create-key-pair --key-name key --query 'KeyMaterial' --output text > ~/.ssh/key.pem
+chmod 400 ~/.ssh/key.pem
+aws ec2 run-instances --image-id ami-****** --count 1 --instance-type p2.xlarge --key-name key
+```
 
-## Image
+Communicate with ssh.
 
-![image](images/image.gif)
+```
+ssh -i ~/.ssh/key.pem ubuntu@<Public IP>
+```
