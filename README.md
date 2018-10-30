@@ -81,4 +81,7 @@ Communicate with ssh.
 
 ```
 ssh -i ~/.ssh/key.pem ubuntu@<Public IP>
+source activate pytorch_p36
+cd distributed_rl
+./run.sh 4
 ```
