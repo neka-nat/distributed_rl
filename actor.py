@@ -21,13 +21,14 @@ class Actor(object):
                  batch_size=50, target_update=200, eps_decay=20000):
         self._env = gym.make('MultiFrameBreakout-v0')
         self._name = name
+        self._vis = vis
         self._batch_size = batch_size
         self._target_update = target_update
         self._eps_decay = eps_decay
         self._policy_net = models.DuelingDQN(self._env.action_space.n).to(device)
-        self._win1 = vis.image(utils.preprocess(self._env.env._get_image()))
-        self._win2 = vis.line(X=np.array([0]), Y=np.array([0.0]),
-                              opts=dict(title='Score %s' % self._name))
+        self._win1 = self._vis.image(utils.preprocess(self._env.env._get_image()))
+        self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0.0]),
+                                    opts=dict(title='Score %s' % self._name))
         self._local_memory = replay_memory.ReplayMemory(1000)
         self._connect = redis.StrictRedis(host=hostname)
 
@@ -51,11 +52,12 @@ class Actor(object):
                 r_nstep = sum([gamma_nsteps[nstep_return - 1 - i] * step_buffer[i].reward for i in range(nstep_return)])
                 self._local_memory.push(step_buffer[0].state, step_buffer[0].action,
                                         step_buffer[-1].next_state, r_nstep, step_buffer[-1].done)
-            vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
+            self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
             if done:
-                vis.line(X=np.array([n_episode]), Y=np.array([sum_rwd]), win=self._win2, update='append')
+                self._vis.line(X=np.array([n_episode]), Y=np.array([sum_rwd]),
+                               win=self._win2, update='append')
                 state = self._env.reset()
                 sum_rwd = 0
                 n_episode += 1

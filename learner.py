@@ -16,13 +16,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Learner(object):
     def __init__(self, n_action, vis, hostname='localhost'):
+        self._vis = vis
         self._policy_net = models.DuelingDQN(n_action).to(device)
         self._target_net = models.DuelingDQN(n_action).to(device)
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
         self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=1.5e-7)
-        self._win = vis.line(X=np.array([0]), Y=np.array([0]),
+        self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
         self._memory = replay.Replay(30000, self._connect)
         self._memory.start()
@@ -55,8 +56,8 @@ class Learner(object):
             if t % fit_timing == 0:
                 print('[Learner] Remove to fit.')
                 self._memory.remove_to_fit()
-                vis.line(X=np.array([t]), Y=np.array([len(self._memory)]),
-                         win=self._win, update='append')
+                self._vis.line(X=np.array([t]), Y=np.array([len(self._memory)]),
+                               win=self._win, update='append')
             if t % target_update == 0:
                 self._target_net.load_state_dict(self._policy_net.state_dict())
 
