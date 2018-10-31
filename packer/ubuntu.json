@@ -20,8 +20,7 @@
 		"sudo apt-get -y update",
 		"sudo apt-get -y install git redis-server",
 		"bash -c 'source activate pytorch_p36; pip install gym redis pillow atari-py visdom numpy'",
-		"git clone https://github.com/neka-nat/distributed_rl.git",
-		"echo 'source activate pytorch_p3' >> .bashrc"
+		"git clone https://github.com/neka-nat/distributed_rl.git"
 	    ]
         }
     ]

@@ -74,11 +74,14 @@ Run instance.
 ```
 aws ec2 create-key-pair --key-name key --query 'KeyMaterial' --output text > ~/.ssh/key.pem
 chmod 400 ~/.ssh/key.pem
-aws ec2 run-instances --image-id ami-****** --count 1 --instance-type p2.xlarge --key-name key
+aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 1 --instance-type p2.xlarge --key-name key
 ```
 
 Execute the run script with ssh.
 
 ```
-ssh -i ~/.ssh/key.pem ubuntu@<Public IP> "cd distributed_rl && ./run.sh 4"
+ssh -i ~/.ssh/key.pem ubuntu@<Public IP>
+source activate pytorch_p36
+cd distributed_rl
+./run.sh 4
 ```
