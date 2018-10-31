@@ -77,11 +77,8 @@ chmod 400 ~/.ssh/key.pem
 aws ec2 run-instances --image-id ami-****** --count 1 --instance-type p2.xlarge --key-name key
 ```
 
-Communicate with ssh.
+Execute the run script with ssh.
 
 ```
-ssh -i ~/.ssh/key.pem ubuntu@<Public IP>
-source activate pytorch_p36
-cd distributed_rl
-./run.sh 4
+ssh -i ~/.ssh/key.pem ubuntu@<Public IP> "cd distributed_rl && ./run.sh 4"
 ```
