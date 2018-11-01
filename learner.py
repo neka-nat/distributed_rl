@@ -51,8 +51,8 @@ class Learner(object):
             self._memory.update_priorities(indices,
                                            prio.squeeze(1).cpu().numpy().tolist())
             self._optimizer.step()
-
             self._connect.set('params', cPickle.dumps(self._policy_net.to(actor_device).state_dict()))
+            self._policy_net.to(device)
             if t % fit_timing == 0:
                 print('[Learner] Remove to fit.')
                 self._memory.remove_to_fit()
