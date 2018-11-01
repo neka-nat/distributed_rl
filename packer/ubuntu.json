@@ -21,7 +21,7 @@
 		"sudo apt-get -y install git redis-server",
 		"pip install torch gym redis pillow atari-py visdom numpy",
 		"git clone https://github.com/neka-nat/distributed_rl.git",
-		"sudo service redis stop"
+		"sudo /etc/init.d/redis-server stop"
 	    ]
         }
     ]

@@ -6,6 +6,8 @@ This is pytorch implementation of distributed deep reinforcement learning.
 
 ![image](images/image.gif)
 
+![actors](images/actors.gif)
+
 ## System
 In our system, there are two processes, Actor and Learner.
 In Learner process, thread of the replay memory runs at the same time,
