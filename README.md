@@ -80,8 +80,5 @@ aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 1 --instance-type p2
 Execute the run script with ssh.
 
 ```
-ssh -i ~/.ssh/key.pem ubuntu@<Public IP>
-source activate pytorch_p36
-cd distributed_rl
-./run.sh 4
+ssh -i ~/.ssh/key.pem ubuntu@<Public IP> 'cd distributed_rl && ./run.sh 4'
 ```
