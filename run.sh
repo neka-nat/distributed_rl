@@ -3,6 +3,13 @@
 trap 'kill $(jobs -p)' SIGINT SIGTERM EXIT
 config=${2:-"config/all.conf"}
 source $config
+if [ -z "$redis_server" ]; then
+    redis_server=$3
+fi
+
+if [ -z "$visdom_server" ]; then
+    visdom_server=$3
+fi
 
 echo "redis server:" $redis_server
 echo "visdom server:" $visdom_server
@@ -30,8 +37,13 @@ if $actor; then
 fi
 
 if $leaner; then
-    python learner.py -r $redis_server -v $visdom_server &
-    pids="$pids $!"
+    if [ -z "$actor_device" ]; then
+	python learner.py -r $redis_server -v $visdom_server &
+	pids="$pids $!"
+    else
+	python learner.py -r $redis_server -v $visdom_server -a $actor_device &
+	pids="$pids $!"
+    fi
 fi
 
 wait -n $pids

@@ -69,16 +69,27 @@ Create AMI.
 packer build packer/ubuntu.json
 ```
 
-Run instance.
+Create key-pair.
 
 ```
 aws ec2 create-key-pair --key-name key --query 'KeyMaterial' --output text > ~/.ssh/key.pem
 chmod 400 ~/.ssh/key.pem
+```
+
+Run instance for learner and execute the run script with ssh.
+
+```
 aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 1 --instance-type p2.xlarge --key-name key
+ssh -i ~/.ssh/key.pem ubuntu@<Public IP of learner's instance>
+cd distributed_rl
+./run.sh 0 config/learner.conf localhost
 ```
 
-Execute the run script with ssh.
+Run instance for actor and execute the run script with ssh.
 
 ```
-ssh -i ~/.ssh/key.pem ubuntu@<Public IP> 'cd distributed_rl && ./run.sh 4'
+aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 1 --instance-type t2.xlarge --key-name key
+ssh -i ~/.ssh/key.pem ubuntu@<Public IP of actor's instance>
+cd distributed_rl
+./run.sh 4 config/actor.conf <Public IP of learner's instance>
 ```

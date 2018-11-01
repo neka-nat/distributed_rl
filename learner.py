@@ -29,7 +29,7 @@ class Learner(object):
         self._memory.start()
 
     def optimize_loop(self, batch_size=512, nstep_return=3, gamma=0.999,
-                      beta=0.4, fit_timing=100, target_update=1000):
+                      beta=0.4, fit_timing=100, target_update=1000, actor_device=device):
         gamma_nstep = gamma ** nstep_return
         for t in count():
             if len(self._memory) < batch_size:
@@ -52,7 +52,7 @@ class Learner(object):
                                            prio.squeeze(1).cpu().numpy().tolist())
             self._optimizer.step()
 
-            self._connect.set('params', cPickle.dumps(self._policy_net.state_dict()))
+            self._connect.set('params', cPickle.dumps(self._policy_net.to(actor_device).state_dict()))
             if t % fit_timing == 0:
                 print('[Learner] Remove to fit.')
                 self._memory.remove_to_fit()
@@ -68,8 +68,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Learner process for distributed reinforcement.')
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
+    parser.add_argument('-a', '--actordevice', type=str, default='', help="Actor's device.")
     args = parser.parse_args()
     env = gym.make('MultiFrameBreakout-v0')
     vis = visdom.Visdom(server='http://' + args.visdomserver)
+    actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
     learner = Learner(env.action_space.n, vis, hostname=args.redisserver)
-    learner.optimize_loop()
+    learner.optimize_loop(actor_device=torch.device(actordevice))

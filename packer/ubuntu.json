@@ -6,7 +6,7 @@
             "ami_name": "distributed_rl",
             "region": "us-west-2",
             "source_ami": "ami-0231c1de0d92fe7a2",
-            "instance_type": "p2.xlarge",
+            "instance_type": "t2.small",
             "ssh_username": "ubuntu"
         }
     ],
@@ -20,7 +20,8 @@
 		"sudo apt-get -y update",
 		"sudo apt-get -y install git redis-server",
 		"pip install torch gym redis pillow atari-py visdom numpy",
-		"git clone https://github.com/neka-nat/distributed_rl.git"
+		"git clone https://github.com/neka-nat/distributed_rl.git",
+		"sudo service redis stop"
 	    ]
         }
     ]
