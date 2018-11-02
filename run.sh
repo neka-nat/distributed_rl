@@ -25,7 +25,7 @@ fi
 if $visdom; then
     python -m visdom.server -logging_level WARNING &
     pids="$pids $!"
-    sleep 1
+    sleep 2
 fi
 
 if $actor; then
