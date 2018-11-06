@@ -53,6 +53,13 @@ pipenv shell
 ./run.sh <number of actors>
 ```
 
+## Docker build
+
+```
+cd distributed_rl
+docker build -t distributed_rl:1.0 .
+```
+
 ## Use AWS
 
 Set configuration of aws.
