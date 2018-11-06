@@ -11,6 +11,7 @@ gym = "*"
 atari-py = ">=0.1.1"
 visdom = "*"
 numpy = "*"
+"fabric3" = "*"
 
 [dev-packages]
 
