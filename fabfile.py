@@ -6,7 +6,7 @@ def all_run():
     with cd('distributed_rl'):
         run("./run.sh 4")
 
-def actor_run(num_proc=1, learner_host='localhost'):
+def actor_run(num_proc='1', learner_host='localhost'):
     print('num_proc: %s' % num_proc)
     print('learner_host: %s' % learner_host)
     with cd('distributed_rl'):
