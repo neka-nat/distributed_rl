@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import time
 import numpy as np
 from itertools import count
 if sys.version_info.major == 3:
@@ -60,6 +61,7 @@ class Learner(object):
                                win=self._win, update='append')
             if t % target_update == 0:
                 self._target_net.load_state_dict(self._policy_net.state_dict())
+            time.sleep(0.01)
 
 if __name__ == '__main__':
     import argparse

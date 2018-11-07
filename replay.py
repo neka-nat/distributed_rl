@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import time
 import threading
 if sys.version_info.major == 3:
     import _pickle as cPickle
@@ -19,21 +20,31 @@ class Replay(threading.Thread):
 
     def run(self):
         while True:
-            data = self._connect.lpop('experience')
-            if not data is None:
-                trans, prios = cPickle.loads(data)
+            pipe = self._connect.pipeline()
+            pipe.lrange('experience', 0, -1)
+            pipe.ltrim('experience', -1, 0)
+            data = pipe.execute()[0]
+            if not data is None and len(data) > 0:
+                trans, prios = [], []
+                for d in data:
+                    t, p = cPickle.loads(d)
+                    trans.extend(t)
+                    prios.extend(p)
                 with self._lock:
                     self._memory.push(trans, prios)
+            time.sleep(0.01)
 
     def update_priorities(self, indices, priorities):
-        self._memory.update_priorities(indices, priorities)
+        with self._lock:
+            self._memory.update_priorities(indices, priorities)
 
     def remove_to_fit(self):
         with self._lock:
             self._memory.remove_to_fit()
 
     def sample(self, batch_size):
-        return self._memory.sample(batch_size)
+        with self._lock:
+            return self._memory.sample(batch_size)
 
     def __len__(self):
         return len(self._memory)
