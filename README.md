@@ -96,5 +96,5 @@ Run instance for actor and execute fabric.
 
 ```
 aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 5 --instance-type t2.xlarge --key-name key
-fab -H <Public IP of actor1's instance>,<Public IP of actor2's instance>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=10,leaner_host=<Public IP of learner's instance>
+fab -P -H <Public IP of actor1's instance>,<Public IP of actor2's instance>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=10,leaner_host=<Public IP of learner's instance>
 ```
