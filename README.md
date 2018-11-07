@@ -85,16 +85,21 @@ aws ec2 create-key-pair --key-name key --query 'KeyMaterial' --output text > ~/.
 chmod 400 ~/.ssh/key.pem
 ```
 
-Run instance for learner and execute fabric.
+Run instances.
 
 ```
-aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 1 --instance-type p2.xlarge --key-name key
+cd aws
+./run_instances.sh <number of actor's instance>
+```
+
+Run fabric for learner.
+
+```
 fab -H <Public IP of learner's instance> -u ubuntu -i ~/.ssh/key.pem learner_run
 ```
 
-Run instance for actor and execute fabric.
+Run fabric for actor.
 
 ```
-aws ec2 run-instances --image-id $(./get_ami_id.sh) --count 5 --instance-type t2.xlarge --key-name key
 fab -P -H <Public IP of actor1's instance>,<Public IP of actor2's instance>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=10,leaner_host=<Public IP of learner's instance>
 ```
