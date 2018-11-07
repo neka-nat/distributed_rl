@@ -101,5 +101,5 @@ fab -H <Public IP of learner's instance> -u ubuntu -i ~/.ssh/key.pem learner_run
 Run fabric for actor.
 
 ```
-fab -P -H <Public IP of actor1's instance>,<Public IP of actor2's instance>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=10,leaner_host=<Public IP of learner's instance>
+fab -P -H <Public IP of actor1's instance>,<Public IP of actor2's instance>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=15,leaner_host=<Public IP of learner's instance>
 ```
