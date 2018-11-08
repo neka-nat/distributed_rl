@@ -12,7 +12,7 @@ import replay
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Learner(object):
-    def __init__(self, n_action, vis, hostname='localhost'):
+    def __init__(self, n_action, vis, replay_size=30000, hostname='localhost'):
         self._vis = vis
         self._policy_net = models.DuelingDQN(n_action).to(device)
         self._target_net = models.DuelingDQN(n_action).to(device)
@@ -23,7 +23,7 @@ class Learner(object):
         self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=1.5e-7)
         self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
-        self._memory = replay.Replay(30000, self._connect)
+        self._memory = replay.Replay(replay_size, self._connect)
         self._memory.start()
 
     def optimize_loop(self, batch_size=512, nstep_return=3, gamma=0.999,
@@ -69,9 +69,10 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
     parser.add_argument('-a', '--actordevice', type=str, default='', help="Actor's device.")
+    parser.add_argument('-s', '--replaysize', type=int, default=30000, help="Replay memory size.")
     args = parser.parse_args()
     env = gym.make('MultiFrameBreakout-v0')
     vis = visdom.Visdom(server='http://' + args.visdomserver)
     actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
-    learner = Learner(env.action_space.n, vis, hostname=args.redisserver)
+    learner = Learner(env.action_space.n, vis, replay_size=args.replaysize, hostname=args.redisserver)
     learner.optimize_loop(actor_device=torch.device(actordevice))
