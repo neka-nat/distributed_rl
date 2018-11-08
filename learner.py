@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-import sys
 import time
 import numpy as np
 from itertools import count
-if sys.version_info.major == 3:
-    import _pickle as cPickle
-else:
-    import cPickle
 import redis
 import torch
 import torch.optim as optim
-from libs import models, wrapped_env
+import torch.optim as optim
+from libs import utils, models, wrapped_env
 import replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -23,6 +19,7 @@ class Learner(object):
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
+        self._connect.delete('params')
         self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=0.00025 / 4, alpha=0.95, eps=1.5e-7)
         self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
@@ -52,7 +49,8 @@ class Learner(object):
             self._memory.update_priorities(indices,
                                            prio.squeeze(1).cpu().numpy().tolist())
             self._optimizer.step()
-            self._connect.set('params', cPickle.dumps(self._policy_net.to(actor_device).state_dict()))
+
+            self._connect.set('params', utils.dumps(self._policy_net.to(actor_device).state_dict()))
             self._policy_net.to(device)
             if t % fit_timing == 0:
                 print('[Learner] Remove to fit.')

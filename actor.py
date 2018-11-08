@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-import sys
 import gym
 import numpy as np
 from itertools import count
 from collections import deque
-if sys.version_info.major == 3:
-    import _pickle as cPickle
-else:
-    import cPickle
 import redis
 import torch
 from libs import replay_memory, utils, wrapped_env, models
@@ -69,14 +64,14 @@ class Actor(object):
                                                            detach=True, device=device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',
-                                    cPickle.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))
+                                    utils.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))
                 self._local_memory.clear()
 
             if t % self._target_update == 0:
                 params = self._connect.get('params')
                 if not params is None:
                     print("[%s] Sync params." % self._name)
-                    self._policy_net.load_state_dict(cPickle.loads(params))
+                    self._policy_net.load_state_dict(utils.loads(params))
 
 if __name__ == '__main__':
     import argparse

@@ -1,7 +1,18 @@
+import sys
 import random
 from collections import namedtuple
 import numpy as np
 from PIL import Image
+try:
+    import joblib
+    from io import BytesIO
+    use_joblib = True
+except:
+    if sys.version_info.major == 3:
+        import _pickle as cPickle
+    else:
+        import cPickle
+    use_joblib = False
 import torch
 
 Transition = namedtuple('Transition',
@@ -28,3 +39,18 @@ def epsilon_greedy(state, policy_net, eps=0.1):
             return policy_net(state).max(1)[1].view(1).cpu()
     else:
         return torch.tensor([random.randrange(policy_net.n_action)], dtype=torch.long)
+
+def dumps(data, compress=3):
+    if use_joblib:
+        bio = BytesIO()
+        joblib.dump(data, bio, compress=compress)
+        return bio.getvalue()
+    else:
+        return cPickle.dumps(data)
+
+def loads(packed):
+    if use_joblib:
+        bio = BytesIO(packed)
+        return joblib.load(bio)
+    else:
+        return cPickle.loads(packed)

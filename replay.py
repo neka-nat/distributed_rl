@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-import sys
 import time
 import threading
-if sys.version_info.major == 3:
-    import _pickle as cPickle
-else:
-    import cPickle
 import redis
-from libs import replay_memory
+from libs import utils, replay_memory
 
 class Replay(threading.Thread):
     def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost')):
@@ -27,7 +22,7 @@ class Replay(threading.Thread):
             if not data is None and len(data) > 0:
                 trans, prios = [], []
                 for d in data:
-                    t, p = cPickle.loads(d)
+                    t, p = utils.loads(d)
                     trans.extend(t)
                     prios.extend(p)
                 with self._lock:
