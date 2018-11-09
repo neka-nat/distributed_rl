@@ -19,14 +19,11 @@ class Replay(threading.Thread):
             pipe.lrange('experience', 0, -1)
             pipe.ltrim('experience', -1, 0)
             data = pipe.execute()[0]
-            if not data is None and len(data) > 0:
-                trans, prios = [], []
+            if not data is None:
                 for d in data:
                     t, p = utils.loads(d)
-                    trans.extend(t)
-                    prios.extend(p)
-                with self._lock:
-                    self._memory.push(trans, prios)
+                    with self._lock:
+                        self._memory.push(t, p)
             time.sleep(0.01)
 
     def update_priorities(self, indices, priorities):

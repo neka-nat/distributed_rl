@@ -3,17 +3,14 @@ import random
 from collections import namedtuple
 import numpy as np
 from PIL import Image
-try:
-    import joblib
-    from io import BytesIO
-    use_joblib = True
-except:
-    if sys.version_info.major == 3:
-        import _pickle as cPickle
-    else:
-        import cPickle
-    use_joblib = False
+if sys.version_info.major == 3:
+    import _pickle as cPickle
+else:
+    import cPickle
 import torch
+_USE_COMPRESS = True
+if _USE_COMPRESS:
+    import lz4.frame
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
@@ -40,17 +37,14 @@ def epsilon_greedy(state, policy_net, eps=0.1):
     else:
         return torch.tensor([random.randrange(policy_net.n_action)], dtype=torch.long)
 
-def dumps(data, compress=3):
-    if use_joblib:
-        bio = BytesIO()
-        joblib.dump(data, bio, compress=compress)
-        return bio.getvalue()
+def dumps(data, compress=1):
+    if _USE_COMPRESS:
+        return lz4.frame.compress(cPickle.dumps(data))
     else:
         return cPickle.dumps(data)
 
 def loads(packed):
-    if use_joblib:
-        bio = BytesIO(packed)
-        return joblib.load(bio)
+    if _USE_COMPRESS:
+        return cPickle.loads(lz4.frame.decompress(packed))
     else:
         return cPickle.loads(packed)
