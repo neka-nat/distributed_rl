@@ -27,7 +27,8 @@ class Actor(object):
         self._local_memory = replay_memory.ReplayMemory(1000)
         self._connect = redis.StrictRedis(host=hostname)
 
-    def run(self, nstep_return=3, gamma=0.999):
+    def run(self, nstep_return=3, gamma=0.999,
+            clip=lambda x: min(max(-1.0, x), 1.0)):
         state = self._env.reset()
         step_buffer = deque(maxlen=nstep_return)
         gamma_nsteps = [gamma ** i for i in range(nstep_return + 1)]
@@ -39,14 +40,14 @@ class Actor(object):
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
-            reward = torch.tensor([min(max(-1.0, reward), 1.0)])
+            reward = torch.tensor([clip(reward)])
             done = torch.tensor([float(done)])
-            step_buffer.append(utils.Transition(torch.from_numpy(state), action,
-                                                torch.from_numpy(next_state), reward, done))
+            step_buffer.append(utils.Transition(torch.from_numpy(state), action, reward,
+                                                torch.from_numpy(next_state), done))
             if len(step_buffer) == nstep_return:
                 r_nstep = sum([gamma_nsteps[nstep_return - 1 - i] * step_buffer[i].reward for i in range(nstep_return)])
-                self._local_memory.push(step_buffer[0].state, step_buffer[0].action,
-                                        step_buffer[-1].next_state, r_nstep, step_buffer[-1].done)
+                self._local_memory.push(step_buffer[0].state, step_buffer[0].action, r_nstep,
+                                        step_buffer[-1].next_state, step_buffer[-1].done)
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()

@@ -72,6 +72,14 @@ register(
 )
 
 register(
+    id='MultiFrameCentipede-v0',
+    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    kwargs={'game': 'centipede', 'obs_type': 'image'},
+    max_episode_steps=10000,
+    nondeterministic=False,
+)
+
+register(
     id='MultiFrameSpaceInvaders-v0',
     entry_point='libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'game': 'space_invaders', 'obs_type': 'image'},
