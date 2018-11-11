@@ -5,17 +5,18 @@ from itertools import count
 import redis
 import torch
 import torch.optim as optim
-from libs import utils, models, wrapped_env
+from libs import utils
 import replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Learner(object):
-    def __init__(self, n_action, vis, replay_size=30000, hostname='localhost',
+    def __init__(self, policy_net, target_net,
+                 vis, replay_size=30000, hostname='localhost',
                  lr=0.00025 / 4, alpha=0.95, eps=1.5e-7):
         self._vis = vis
-        self._policy_net = models.DuelingDQN(n_action).to(device)
-        self._target_net = models.DuelingDQN(n_action).to(device)
+        self._policy_net = policy_net
+        self._target_net = target_net
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
@@ -65,14 +66,18 @@ if __name__ == '__main__':
     import argparse
     import gym
     import visdom
+    from libs import models, wrapped_env
     parser = argparse.ArgumentParser(description='Learner process for distributed reinforcement.')
+    parser.add_argument('-e', '--env', type=str, default='MultiFrameBreakout-v0', help='Environment name.')
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
     parser.add_argument('-a', '--actordevice', type=str, default='', help="Actor's device.")
     parser.add_argument('-s', '--replaysize', type=int, default=30000, help="Replay memory size.")
     args = parser.parse_args()
-    env = gym.make('MultiFrameBreakout-v0')
+    env = gym.make(args.env)
     vis = visdom.Visdom(server='http://' + args.visdomserver)
     actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
-    learner = Learner(env.action_space.n, vis, replay_size=args.replaysize, hostname=args.redisserver)
+    learner = Learner(models.DuelingDQN(env.action_space.n).to(device),
+                      models.DuelingDQN(env.action_space.n).to(device),
+                      vis, replay_size=args.replaysize, hostname=args.redisserver)
     learner.optimize_loop(actor_device=torch.device(actordevice))

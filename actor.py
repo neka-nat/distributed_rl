@@ -1,26 +1,25 @@
 # -*- coding: utf-8 -*-
-import gym
 import numpy as np
 from itertools import count
 from collections import deque
 import redis
 import torch
-from libs import replay_memory, utils, wrapped_env, models
+from libs import replay_memory, utils
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Actor(object):
     EPS_START = 1.0
     EPS_END = 0.1
-    def __init__(self, name, vis, hostname='localhost',
+    def __init__(self, name, env, policy_net, vis, hostname='localhost',
                  batch_size=50, target_update=200, eps_decay=20000):
-        self._env = gym.make('MultiFrameBreakout-v0')
+        self._env = env
         self._name = name
         self._vis = vis
         self._batch_size = batch_size
         self._target_update = target_update
         self._eps_decay = eps_decay
-        self._policy_net = models.DuelingDQN(self._env.action_space.n).to(device)
+        self._policy_net = policy_net
         self._win1 = self._vis.image(utils.preprocess(self._env.env._get_image()))
         self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0.0]),
                                     opts=dict(title='Score %s' % self._name))
@@ -44,8 +43,8 @@ class Actor(object):
             done = torch.tensor([float(done)])
             step_buffer.append(utils.Transition(torch.from_numpy(state), action, reward,
                                                 torch.from_numpy(next_state), done))
-            if len(step_buffer) == nstep_return:
-                r_nstep = sum([gamma_nsteps[nstep_return - 1 - i] * step_buffer[i].reward for i in range(nstep_return)])
+            if len(step_buffer) == step_buffer.maxlen:
+                r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])
                 self._local_memory.push(step_buffer[0].state, step_buffer[0].action, r_nstep,
                                         step_buffer[-1].next_state, step_buffer[-1].done)
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
@@ -76,12 +75,17 @@ class Actor(object):
 
 if __name__ == '__main__':
     import argparse
+    import gym
     import visdom
+    from libs import wrapped_env, models
     parser = argparse.ArgumentParser(description='Actor process for distributed reinforcement.')
     parser.add_argument('-n', '--name', type=str, default='actor1', help='Actor name.')
+    parser.add_argument('-e', '--env', type=str, default='MultiFrameBreakout-v0', help='Environment name.')
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
     args = parser.parse_args()
     vis = visdom.Visdom(server='http://' + args.visdomserver)
-    actor = Actor(args.name, vis, hostname=args.redisserver)
+    env = gym.make(args.env)
+    actor = Actor(args.name, env, models.DuelingDQN(env.action_space.n).to(device),
+                  vis, hostname=args.redisserver)
     actor.run()
