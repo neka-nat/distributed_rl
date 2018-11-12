@@ -92,14 +92,14 @@ cd aws
 ./run_instances.sh <number of actor's instance>
 ```
 
-Run fabric for learner.
+Run fabric for a learner.
 
 ```
 fab -H <Public IP of learner's instance> -u ubuntu -i ~/.ssh/key.pem learner_run
 ```
 
-Run fabric for actor.
+Run fabric for actors.
 
 ```
-fab -P -H <Public IP of actor1's instance>,<Public IP of actor2's instance>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=15,leaner_host=<Public IP of learner's instance>
+fab -P -H <Public IP of actor's instance 1>,<Public IP of actor's instance 2>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=15,leaner_host=<Public IP of learner's instance>
 ```
