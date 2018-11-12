@@ -39,7 +39,7 @@ def epsilon_greedy(state, policy_net, eps=0.1):
     else:
         return torch.tensor([random.randrange(policy_net.n_action)], dtype=torch.long)
 
-def dumps(data, compress=1):
+def dumps(data):
     if _USE_COMPRESS:
         return lz4.frame.compress(cPickle.dumps(data))
     else:
