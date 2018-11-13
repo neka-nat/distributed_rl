@@ -41,10 +41,10 @@ def run_instances_and_wait(config_file):
     print("Success in running all instances.")
     print("Learner's command: ", "fab -H %s -u ubuntu -i %s learner_run" % (learner_ip[0], config['ssh_key_file']))
     print("Actor's command: ",
-          "fab -H %s -u ubuntu -i %s actor_run:num_proc=%d,leaner_host=%s" % (', '.join(actors_ip),
-                                                                              config['ssh_key_file'],
-                                                                              config['num_actors_process_for_each_instance'],
-                                                                              learner_ip[0]))
+          "fab -P -H %s -u ubuntu -i %s actor_run:num_proc=%d,leaner_host=%s" % (','.join(actors_ip),
+                                                                                 config['ssh_key_file'],
+                                                                                 config['num_actors_process_for_each_instance'],
+                                                                                 learner_ip[0]))
 
 if __name__ == '__main__':
     import argparse
