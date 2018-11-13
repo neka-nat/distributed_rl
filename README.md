@@ -47,10 +47,12 @@ sudo service redis restart
 ```
 
 ## Run
+The following command is running all actors and learner in localhost.
+The number of actor's processes is given as an argument.
 
 ```
 pipenv shell
-./run.sh <number of actors>
+./run.sh 4
 ```
 
 ## Docker build
