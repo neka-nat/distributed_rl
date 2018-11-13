@@ -89,7 +89,7 @@ Run instances.
 
 ```
 cd aws
-./run_instances.sh <number of actor's instance>
+python aws_run_instances.py
 ```
 
 Run fabric for a learner.
