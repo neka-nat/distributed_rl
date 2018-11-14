@@ -1,6 +1,8 @@
 #coding: utf-8
-from fabric.api import run, cd, settings
-from fabric.api import env
+from fabric.api import run, cd, settings, local
+
+def local_run(num_proc='4'):
+    local("./run.sh %s" % num_proc)
 
 def all_run(directory='distributed_rl', num_proc='4'):
     with cd(directory):

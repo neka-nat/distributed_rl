@@ -91,7 +91,7 @@ Run instances.
 
 ```
 cd aws
-python aws_run_instances.py
+python aws_run_instances.py aws_config.yaml
 ```
 
 Run fabric for a learner.
