@@ -26,6 +26,12 @@ class Actor(object):
         self._local_memory = replay_memory.ReplayMemory(1000)
         self._connect = redis.StrictRedis(host=hostname)
 
+    def _pull_params(self):
+        params = self._connect.get('params')
+        if not params is None:
+            print("[%s] Sync params." % self._name)
+            self._policy_net.load_state_dict(utils.loads(params))
+
     def run(self, nstep_return=3, gamma=0.999,
             clip=lambda x: min(max(-1.0, x), 1.0)):
         state = self._env.reset()
@@ -45,8 +51,8 @@ class Actor(object):
                                                 torch.from_numpy(next_state), done))
             if len(step_buffer) == step_buffer.maxlen:
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])
-                self._local_memory.push(step_buffer[0].state, step_buffer[0].action, r_nstep,
-                                        step_buffer[-1].next_state, step_buffer[-1].done)
+                self._local_memory.push(utils.Transition(step_buffer[0].state, step_buffer[0].action, r_nstep,
+                                                         step_buffer[-1].next_state, step_buffer[-1].done))
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
@@ -68,7 +74,4 @@ class Actor(object):
                 self._local_memory.clear()
 
             if t % self._target_update == 0:
-                params = self._connect.get('params')
-                if not params is None:
-                    print("[%s] Sync params." % self._name)
-                    self._policy_net.load_state_dict(utils.loads(params))
+                self._pull_params()

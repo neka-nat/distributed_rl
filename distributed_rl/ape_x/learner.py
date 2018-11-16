@@ -5,8 +5,7 @@ from itertools import count
 import redis
 import torch
 import torch.optim as optim
-from ..libs import utils
-from ..libs import replay
+from ..libs import utils, replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

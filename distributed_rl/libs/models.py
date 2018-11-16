@@ -50,8 +50,8 @@ class DuelingDQN(nn.Module):
         return delta, prios.detach()
 
 class DuelingLSTMDQN(nn.Module):
-    def __init__(self, n_action, input_shape=(4, 84, 84)):
-        super(DuelingDQN, self).__init__()
+    def __init__(self, n_action, batch_size, input_shape=(4, 84, 84)):
+        super(DuelingLSTMDQN, self).__init__()
         self.n_action = n_action
         self.conv1 = nn.Conv2d(input_shape[0], 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
@@ -63,23 +63,23 @@ class DuelingLSTMDQN(nn.Module):
         self.adv2 = nn.Linear(512, self.n_action)
         self.val1 = nn.Linear(512, 512)
         self.val2 = nn.Linear(512, 1)
-        self.reset()
+        self.cx = torch.zeros(batch_size, 512)
+        self.hx = torch.zeros(batch_size, 512)
 
     def reset(self, done=False):
+        self.cx.detach_()
+        self.hx.detach_()
         if done:
-            self.cx = torch.zeros(1, 512)
-            self.hx = torch.zeros(1, 512)
-        else:
-            self.cx = self.cx.detach()
-            self.hx = self.hx.detach()
+            self.cx.zero_()
+            self.hx.zero_()
 
     def get_state(self):
-        return self.hx.detach(), self.cx.detach()
+        return self.hx.detach().cpu(), self.cx.detach().cpu()
 
-    def set_state(self, state):
+    def set_state(self, state, device):
         hx, cx = state
-        self.hx = hx
-        self.cx = cx
+        self.hx = hx.to(device)
+        self.cx = cx.to(device)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -93,7 +93,8 @@ class DuelingLSTMDQN(nn.Module):
         val = self.val2(val)
         return val + adv - adv.mean(1, keepdim=True)
 
-    def calc_priorities(self, target_net, transitions, eta=0.9, gamma=0.997,
+    def calc_priorities(self, target_net, transitions, n_burn_in=40,
+                        eta=0.9, gamma=0.997,
                         detach=False,
                         device=torch.device("cpu")):
         batch = utils.Transition(*zip(*transitions))
