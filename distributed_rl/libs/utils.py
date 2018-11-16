@@ -17,6 +17,8 @@ class Transition(namedtuple('Transition', ('state', 'action', 'reward', 'next_st
     def __new__(cls, state, action, reward, next_state=None, done=None):
         return super(Transition, cls).__new__(cls, state, action, reward, next_state, done)
 
+Sequence = namedtuple('Sequence', ('transitions', 'recurrent_state'))
+
 _outsize = lambda x, f, p, s: int(x - f + 2 * p) / s + 1
 
 def outsize(x, f, p=0, s=1):
