@@ -25,17 +25,17 @@ fi
 if $actor; then
     for i in `seq $1`
     do
-	python actor.py -n actor_$i -r $redis_server -v $visdom_server &
+	python actor_node.py -n actor_$i -r $redis_server -v $visdom_server &
 	pids="$pids $!"
     done
 fi
 
 if $leaner; then
     if [ -z "$actor_device" ]; then
-	python learner.py -r $redis_server -v $visdom_server &
+	python learner_node.py -r $redis_server -v $visdom_server &
 	pids="$pids $!"
     else
-	python learner.py -r $redis_server -v $visdom_server -a $actor_device &
+	python learner_node.py -r $redis_server -v $visdom_server -a $actor_device &
 	pids="$pids $!"
     fi
 fi

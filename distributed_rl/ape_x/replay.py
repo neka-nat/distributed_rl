@@ -2,7 +2,7 @@
 import time
 import threading
 import redis
-from libs import utils, replay_memory
+from ..libs import utils, replay_memory
 
 class Replay(threading.Thread):
     def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost')):

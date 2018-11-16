@@ -5,8 +5,8 @@ from itertools import count
 import redis
 import torch
 import torch.optim as optim
-from libs import utils
-import replay
+from ..libs import utils
+from . import replay
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -61,23 +61,3 @@ class Learner(object):
             if t % target_update == 0:
                 self._target_net.load_state_dict(self._policy_net.state_dict())
             time.sleep(0.01)
-
-if __name__ == '__main__':
-    import argparse
-    import gym
-    import visdom
-    from libs import models, wrapped_env
-    parser = argparse.ArgumentParser(description='Learner process for distributed reinforcement.')
-    parser.add_argument('-e', '--env', type=str, default='MultiFrameBreakout-v0', help='Environment name.')
-    parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
-    parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
-    parser.add_argument('-a', '--actordevice', type=str, default='', help="Actor's device.")
-    parser.add_argument('-s', '--replaysize', type=int, default=30000, help="Replay memory size.")
-    args = parser.parse_args()
-    env = gym.make(args.env)
-    vis = visdom.Visdom(server='http://' + args.visdomserver)
-    actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
-    learner = Learner(models.DuelingDQN(env.action_space.n).to(device),
-                      models.DuelingDQN(env.action_space.n).to(device),
-                      vis, replay_size=args.replaysize, hostname=args.redisserver)
-    learner.optimize_loop(actor_device=torch.device(actordevice))

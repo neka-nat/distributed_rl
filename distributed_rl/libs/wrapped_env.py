@@ -2,7 +2,7 @@ from collections import deque
 import numpy as np
 from gym import spaces
 from gym.envs.atari.atari_env import AtariEnv
-from libs import utils
+from . import utils
 
 class MultiFrameAtariEnv(AtariEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
@@ -49,7 +49,7 @@ from gym.envs.registration import register
 
 register(
     id='MultiFramePong-v0',
-    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'obs_type': 'image'},
     max_episode_steps=10000,
     nondeterministic=False,
@@ -57,7 +57,7 @@ register(
 
 register(
     id='MultiFrameBreakout-v0',
-    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'game': 'breakout', 'obs_type': 'image'},
     max_episode_steps=10000,
     nondeterministic=False,
@@ -65,7 +65,7 @@ register(
 
 register(
     id='SingleFrameBreakout-v0',
-    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'game': 'breakout', 'obs_type': 'image', 'buf_size': 1, 'gray': False},
     max_episode_steps=10000,
     nondeterministic=False,
@@ -73,7 +73,7 @@ register(
 
 register(
     id='MultiFrameCentipede-v0',
-    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'game': 'centipede', 'obs_type': 'image'},
     max_episode_steps=10000,
     nondeterministic=False,
@@ -81,7 +81,7 @@ register(
 
 register(
     id='MultiFrameSpaceInvaders-v0',
-    entry_point='libs.wrapped_env:MultiFrameAtariEnv',
+    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
     kwargs={'game': 'space_invaders', 'obs_type': 'image'},
     max_episode_steps=10000,
     nondeterministic=False,

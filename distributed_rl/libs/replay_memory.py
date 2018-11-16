@@ -1,7 +1,7 @@
 import random
 from collections import deque
 import numpy as np
-from libs import utils
+from . import utils
 
 class ReplayMemory(object):
     def __init__(self, capacity):

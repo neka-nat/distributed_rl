@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from libs import utils
+from . import utils
 
 class DuelingDQN(nn.Module):
     def __init__(self, n_action, input_shape=(4, 84, 84)):
@@ -74,7 +74,7 @@ class DuelingLSTMDQN(nn.Module):
             self.hx = self.hx.detach()
 
     def get_state(self):
-        return self.hx, self.cx
+        return self.hx.detach(), self.cx.detach()
 
     def set_state(self, state):
         hx, cx = state
