@@ -10,18 +10,29 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def main():
     parser = argparse.ArgumentParser(description='Learner process for distributed reinforcement.')
     parser.add_argument('-e', '--env', type=str, default='MultiFrameBreakout-v0', help='Environment name.')
+    parser.add_argument('-a', '--algorithm', type=str, default='ape_x', choices=['ape_x', 'r2d2'], help='Select an algorithm.')
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
-    parser.add_argument('-a', '--actordevice', type=str, default='', help="Actor's device.")
+    parser.add_argument('-d', '--actordevice', type=str, default='', help="Actor's device.")
     parser.add_argument('-s', '--replaysize', type=int, default=30000, help="Replay memory size.")
     args = parser.parse_args()
     env = gym.make(args.env)
     vis = visdom.Visdom(server='http://' + args.visdomserver)
     actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
-    learner = Learner(models.DuelingDQN(env.action_space.n).to(device),
-                      models.DuelingDQN(env.action_space.n).to(device),
-                      vis, replay_size=args.replaysize, hostname=args.redisserver)
-    learner.optimize_loop(actor_device=torch.device(actordevice))
+    if args.algorithm == 'ape_x':
+        learner = Learner(models.DuelingDQN(env.action_space.n).to(device),
+                          models.DuelingDQN(env.action_space.n).to(device),
+                          vis, replay_size=args.replaysize, hostname=args.redisserver)
+        learner.optimize_loop(actor_device=torch.device(actordevice))
+    elif args.algorithm == 'r2d2':
+        batch_size = 64
+        learner = Learner(models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device),
+                          models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device),
+                          vis, replay_size=args.replaysize, hostname=args.redisserver)
+        learner.optimize_loop(batch_size=batch_size, nstep_return=5,
+                              gamma=0.997, actor_device=torch.device(actordevice))
+    else:
+        raise ValueError('Unknown the algorithm: %s.' % args.algorithm)
 
 if __name__ == '__main__':
     main()

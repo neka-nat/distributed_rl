@@ -8,9 +8,8 @@ if sys.version_info.major == 3:
 else:
     import cPickle
 import torch
+import lz4.frame
 _USE_COMPRESS = True
-if _USE_COMPRESS:
-    import lz4.frame
 
 class Transition(namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))):
     __slots__ = ()

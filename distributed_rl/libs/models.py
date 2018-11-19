@@ -108,10 +108,10 @@ class DuelingLSTMDQN(nn.Module):
         batch = utils.Sequence(*zip(*transitions))
         batch = utils.Sequence(list(zip(*(batch.transitions))),
                                list(zip(*(batch.recurrent_state))))
-        state = self.get_state()
         self.set_state((torch.cat(batch.recurrent_state[0]),
                         torch.cat(batch.recurrent_state[1])), device)
 
+        # burn-in
         with torch.no_grad():
             for t in range(n_burn_in):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
@@ -137,5 +137,4 @@ class DuelingLSTMDQN(nn.Module):
         if detach:
             delta.detach_()
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)
-        self.set_state(state, device)
         return delta.sum(dim=0), prios.detach()

@@ -2,6 +2,7 @@
 
 trap 'kill $(jobs -p)' SIGINT SIGTERM EXIT
 config=${2:-"config/all.conf"}
+algorithm='ape_x'
 source $config
 if [ -z "$redis_server" ]; then
     redis_server=$3
@@ -25,17 +26,17 @@ fi
 if $actor; then
     for i in `seq $1`
     do
-	python actor_node.py -n actor_$i -r $redis_server -v $visdom_server &
+	python actor_node.py -n actor_$i -r $redis_server -v $visdom_server -a $algorithm &
 	pids="$pids $!"
     done
 fi
 
 if $leaner; then
     if [ -z "$actor_device" ]; then
-	python learner_node.py -r $redis_server -v $visdom_server &
+	python learner_node.py -r $redis_server -v $visdom_server -a $algorithm &
 	pids="$pids $!"
     else
-	python learner_node.py -r $redis_server -v $visdom_server -a $actor_device &
+	python learner_node.py -r $redis_server -v $visdom_server -d $actor_device -a $algorithm &
 	pids="$pids $!"
     fi
 fi

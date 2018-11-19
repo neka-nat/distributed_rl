@@ -3,6 +3,7 @@
 This is pytorch implementation of distributed deep reinforcement learning.
 
 * [ape-x](https://arxiv.org/abs/1803.00933)
+* [r2d2](https://openreview.net/forum?id=r1lyTjAqYX) (experimental)
 
 ![image](images/image.gif)
 
