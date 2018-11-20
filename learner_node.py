@@ -28,7 +28,8 @@ def main():
         batch_size = 64
         learner = Learner(models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device),
                           models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device),
-                          vis, replay_size=args.replaysize, hostname=args.redisserver)
+                          vis, replay_size=args.replaysize, hostname=args.redisserver,
+                          use_memory_compress=True)
         learner.optimize_loop(batch_size=batch_size, nstep_return=5,
                               gamma=0.997, actor_device=torch.device(actordevice))
     else:

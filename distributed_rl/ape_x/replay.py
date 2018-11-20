@@ -5,10 +5,11 @@ import redis
 from ..libs import utils, replay_memory
 
 class Replay(threading.Thread):
-    def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost')):
+    def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost'),
+                 use_compress=False):
         super(Replay, self).__init__()
         self.setDaemon(True)
-        self._memory = replay_memory.PrioritizedMemory(size)
+        self._memory = replay_memory.PrioritizedMemory(size, use_compress)
         self._connect = connect
         self._connect.delete('experience')
         self._lock = threading.Lock()

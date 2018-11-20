@@ -66,12 +66,21 @@ class DuelingLSTMDQN(nn.Module):
         self.val2 = nn.Linear(512, 1)
         self.cx = torch.zeros(self.batch_size, 512)
         self.hx = torch.zeros(self.batch_size, 512)
+        self._grad_mode = True
 
     def to(self, device):
         super(DuelingLSTMDQN, self).to(device)
         self.cx = self.cx.to(device)
         self.hx = self.hx.to(device)
         return self
+
+    def train(self, mode=True):
+        super(DuelingLSTMDQN, self).train(mode)
+        self._grad_mode = mode
+        return self
+
+    def eval(self):
+        return self.train(False)
 
     def reset(self, done=False):
         self.cx.detach_()
@@ -89,16 +98,17 @@ class DuelingLSTMDQN(nn.Module):
         self.cx = cx.to(device)
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = x.view(x.size(0), -1)
-        self.hx, self.cx = self.lstm(x, (self.hx, self.cx))
-        adv = F.relu(self.adv1(self.hx))
-        adv = self.adv2(adv)
-        val = F.relu(self.val1(self.hx))
-        val = self.val2(val)
-        return val + adv - adv.mean(1, keepdim=True)
+        with torch.set_grad_enabled(self._grad_mode):
+            x = F.relu(self.conv1(x))
+            x = F.relu(self.conv2(x))
+            x = F.relu(self.conv3(x))
+            x = x.view(x.size(0), -1)
+            self.hx, self.cx = self.lstm(x, (self.hx, self.cx))
+            adv = F.relu(self.adv1(self.hx))
+            adv = self.adv2(adv)
+            val = F.relu(self.val1(self.hx))
+            val = self.val2(val)
+            return val + adv - adv.mean(1, keepdim=True)
 
     def calc_priorities(self, target_net, transitions, n_burn_in=40,
                         eta=0.9, gamma=0.997,

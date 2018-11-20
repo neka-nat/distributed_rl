@@ -13,7 +13,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Learner(object):
     def __init__(self, policy_net, target_net,
                  vis, replay_size=30000, hostname='localhost',
-                 lr=0.00025 / 4, alpha=0.95, eps=1.5e-7):
+                 lr=0.00025 / 4, alpha=0.95, eps=1.5e-7,
+                 use_memory_compress=False):
         self._vis = vis
         self._policy_net = policy_net
         self._target_net = target_net
@@ -24,7 +25,8 @@ class Learner(object):
         self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=lr, alpha=alpha, eps=eps)
         self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
-        self._memory = replay.Replay(replay_size, self._connect)
+        self._memory = replay.Replay(replay_size, self._connect,
+                                     use_compress=use_memory_compress)
         self._memory.start()
 
     def optimize_loop(self, batch_size=512, nstep_return=3, gamma=0.999,

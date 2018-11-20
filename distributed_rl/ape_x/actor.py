@@ -12,7 +12,8 @@ class Actor(object):
     EPS_START = 1.0
     EPS_END = 0.1
     def __init__(self, name, env, policy_net, vis, hostname='localhost',
-                 batch_size=50, target_update=200, eps_decay=20000):
+                 batch_size=50, target_update=200, eps_decay=20000,
+                 use_memory_compress=False):
         self._env = env
         self._name = name
         self._vis = vis
@@ -23,7 +24,7 @@ class Actor(object):
         self._win1 = self._vis.image(utils.preprocess(self._env.env._get_image()))
         self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0.0]),
                                     opts=dict(title='Score %s' % self._name))
-        self._local_memory = replay_memory.ReplayMemory(1000)
+        self._local_memory = replay_memory.ReplayMemory(1000, use_memory_compress)
         self._connect = redis.StrictRedis(host=hostname)
 
     def _pull_params(self):

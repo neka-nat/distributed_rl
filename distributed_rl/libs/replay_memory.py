@@ -3,9 +3,29 @@ from collections import deque
 import numpy as np
 from . import utils
 
+class CompressedDeque(deque):
+    def __init__(self, *args, **kargs):
+        super(CompressedDeque, self).__init__(*args, **kargs)
+
+    def __iter__(self):
+        return (utils.loads(v) for v in super(CompressedDeque, self).__iter__())
+
+    def append(self, data):
+        super(CompressedDeque, self).append(utils.dumps(data))
+
+    def extend(self, datum):
+        for d in datum:
+            self.append(d)
+
+    def __getitem__(self, idx):
+        return utils.loads(super(CompressedDeque, self).__getitem__(idx))
+
 class ReplayMemory(object):
-    def __init__(self, capacity):
-        self.memory = deque(maxlen=capacity)
+    def __init__(self, capacity, use_compress=False):
+        if use_compress:
+            self.memory = CompressedDeque(maxlen=capacity)
+        else:
+            self.memory = deque(maxlen=capacity)
 
     def push(self, data):
         """Saves a transition."""
@@ -22,9 +42,12 @@ class ReplayMemory(object):
 
 
 class PrioritizedMemory(object):
-    def __init__(self, capacity):
+    def __init__(self, capacity, use_compress=False):
         self.capacity = capacity
-        self.transitions = deque()
+        if use_compress:
+            self.transitions = CompressedDeque()
+        else:
+            self.transitions = deque()
         self.priorities = deque()
         self.total_prios = 0.0
     

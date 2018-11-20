@@ -23,7 +23,7 @@ def main():
     elif args.algorithm == 'r2d2':
         from distributed_rl.r2d2.actor import Actor
         actor = Actor(args.name, env, models.DuelingLSTMDQN(env.action_space.n, 1).to(device),
-                      vis, hostname=args.redisserver)
+                      vis, hostname=args.redisserver, use_memory_compress=True)
     else:
         raise ValueError('Unknown the algorithm: %s.' % args.algorithm)
     actor.run()
