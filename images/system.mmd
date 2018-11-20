@@ -1,0 +1,14 @@
+graph BT
+subgraph LearnerNode
+Replay(Replay) --> |Experience| Learner(Learner)
+end
+ActorNode1(ActorNode1) --> |Experience| Replay
+ActorNode2(ActorNode2) --> |Experience| Replay
+ActorNode3(ActorNode3) --> |Experience| Replay
+Learner --> |Model Parameter| ActorNode1
+Learner --> |Model Parameter| ActorNode2
+Learner --> |Model Parameter| ActorNode3
+classDef green fill:#9f6,stroke:#333,stroke-width:2px;
+classDef orange fill:#f96,stroke:#333,stroke-width:2px;
+class Learner green
+class Replay orange
