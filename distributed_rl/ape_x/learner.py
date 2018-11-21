@@ -4,7 +4,6 @@ import numpy as np
 from itertools import count
 import redis
 import torch
-import torch.optim as optim
 from ..libs import utils
 from . import replay
 # if gpu is to be used
@@ -16,17 +15,14 @@ class Learner(object):
     Args:
         policy_net (torch.nn.Module): Q-function network
         target_net (torch.nn.Module): target network
+        optimizer (torch.optim.Optimizer, optional): optimizer
         vis (visdom.Visdom): visdom object
         replay_size (int, optional): size of replay memory
         hostname (str, optional): host name of redis server
-        lr (float, optional): learning rate of RMSprop
-        alpha (float, optional): smoothing constant of RMSprop
-        eps (float, optional): term added to the denominator to improve numerical stability for RMSprop
         use_memory_compress (bool, optional): use the compressed replay memory for saved memory
     """
-    def __init__(self, policy_net, target_net,
+    def __init__(self, policy_net, target_net, optimizer,
                  vis, replay_size=30000, hostname='localhost',
-                 lr=0.00025 / 4, alpha=0.95, eps=1.5e-7,
                  use_memory_compress=False):
         self._vis = vis
         self._policy_net = policy_net
@@ -35,7 +31,7 @@ class Learner(object):
         self._target_net.eval()
         self._connect = redis.StrictRedis(host=hostname)
         self._connect.delete('params')
-        self._optimizer = optim.RMSprop(self._policy_net.parameters(), lr=lr, alpha=alpha, eps=eps)
+        self._optimizer = optimizer
         self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
         self._memory = replay.Replay(replay_size, self._connect,

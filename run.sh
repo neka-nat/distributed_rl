@@ -2,8 +2,8 @@
 
 trap 'kill $(jobs -p)' SIGINT SIGTERM EXIT
 config=${2:-"config/all.conf"}
-algorithm='ape_x'
 source $config
+algorithm=$algorithm
 if [ -z "$redis_server" ]; then
     redis_server=$3
 fi

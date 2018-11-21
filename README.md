@@ -40,6 +40,12 @@ pipenv shell
 ./run.sh 4
 ```
 
+Run r2d2 mode.
+
+```
+./run.sh 4 config/all_r2d2.conf
+```
+
 ## Docker build
 
 ```
