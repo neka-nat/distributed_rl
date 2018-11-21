@@ -49,16 +49,6 @@ docker build -t distributed_rl:1.0 .
 
 ## Use AWS
 
-Set configuration of aws.
-
-```
-aws configure
-# AWS Access Key ID [None]: *********
-# AWS Secret Access Key [None]: *********
-# Default region name [None]: us-west-2
-# Default output format [None]: json
-```
-
 Create AMI.
 
 ```

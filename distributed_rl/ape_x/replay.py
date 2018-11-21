@@ -5,6 +5,13 @@ import redis
 from ..libs import utils, replay_memory
 
 class Replay(threading.Thread):
+    """Replay of Ape-X
+
+    Args:
+        size (int, optional): size of memory
+        connect (redis.StrictRedis, optional): Redis client object
+        use_compress (bool, optional): use the compressed memory for saved memory
+    """
     def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost'),
                  use_compress=False):
         super(Replay, self).__init__()

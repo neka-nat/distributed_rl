@@ -13,7 +13,7 @@ class Actor(actor.Actor):
     EPS_START = 1.0
     EPS_END = 0.1
     def __init__(self, name, env, policy_net, vis, hostname='localhost',
-                 batch_size=10, target_update=200, eps_decay=20000,
+                 batch_size=20, target_update=200, eps_decay=10000,
                  use_memory_compress=False):
         super(Actor, self).__init__(name, env, policy_net, vis, hostname,
                                     batch_size, target_update, eps_decay,

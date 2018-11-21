@@ -9,6 +9,19 @@ from ..libs import replay_memory, utils
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Actor(object):
+    """Actor of Ape-X
+
+    Args:
+        name (str): name of the actor process's name
+        env (gym.Env): Open AI gym environment object
+        policy_net (torch.nn.Module): Q-function network
+        vis (visdom.Visdom): visdom object
+        hostname (str, optional): host name of redis server
+        batch_size (int, optional): batch data size when sending to learner
+        target_update (int, optional): update frequency of the target network
+        eps_decay (int, optional): decay of rate of random action in e-greedy
+        use_memory_compress (bool, optional): use the compressed replay memory for saved memory
+    """
     EPS_START = 1.0
     EPS_END = 0.1
     def __init__(self, name, env, policy_net, vis, hostname='localhost',

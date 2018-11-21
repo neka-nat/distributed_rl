@@ -11,6 +11,19 @@ from . import replay
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Learner(object):
+    """Learner of Ape-X
+
+    Args:
+        policy_net (torch.nn.Module): Q-function network
+        target_net (torch.nn.Module): target network
+        vis (visdom.Visdom): visdom object
+        replay_size (int, optional): size of replay memory
+        hostname (str, optional): host name of redis server
+        lr (float, optional): learning rate of RMSprop
+        alpha (float, optional): smoothing constant of RMSprop
+        eps (float, optional): term added to the denominator to improve numerical stability for RMSprop
+        use_memory_compress (bool, optional): use the compressed replay memory for saved memory
+    """
     def __init__(self, policy_net, target_net,
                  vis, replay_size=30000, hostname='localhost',
                  lr=0.00025 / 4, alpha=0.95, eps=1.5e-7,
