@@ -45,7 +45,6 @@ class Actor(actor.Actor):
             if len(sequence_buffer) == n_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer, recurrent_state_buffer[0]))
                 sequence_buffer = sequence_buffer[-n_burn_in:]
-                self._policy_net.reset()
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
