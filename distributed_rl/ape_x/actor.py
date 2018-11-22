@@ -19,7 +19,7 @@ class Actor(object):
         hostname (str, optional): host name of redis server
         batch_size (int, optional): batch data size when sending to learner
         target_update (int, optional): update frequency of the target network
-        eps_decay (int, optional): decay of rate of random action in e-greedy
+        eps_decay (int, optional): decay of random action rate in e-greedy
     """
     EPS_START = 1.0
     EPS_END = 0.1
