@@ -32,6 +32,7 @@ class Actor(object):
         self._target_update = target_update
         self._eps_decay = eps_decay
         self._policy_net = policy_net
+        self._policy_net.eval()
         self._win1 = self._vis.image(utils.preprocess(self._env.env._get_image()))
         self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0.0]),
                                     opts=dict(title='Score %s' % self._name))
@@ -78,8 +79,7 @@ class Actor(object):
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._policy_net, samples,
-                                                           gamma=gamma_nsteps[-1],
-                                                           detach=True, device=device)
+                                                           gamma=gamma_nsteps[-1], device=device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',
                                     utils.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))

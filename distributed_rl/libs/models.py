@@ -29,7 +29,6 @@ class DuelingDQN(nn.Module):
         return val + adv - adv.mean(1, keepdim=True)
 
     def calc_priorities(self, target_net, transitions, alpha=0.6, gamma=0.999,
-                        detach=False,
                         device=torch.device("cpu")):
         batch = utils.Transition(*zip(*transitions))
 
@@ -44,8 +43,6 @@ class DuelingDQN(nn.Module):
         next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
         expected_state_action_values = (next_state_values * gamma * (1.0 - done_batch)) + reward_batch
         delta = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
-        if detach:
-            delta.detach_()
         prios = (delta.abs() + 1e-5).pow(alpha)
         return delta, prios.detach()
 
@@ -112,7 +109,6 @@ class DuelingLSTMDQN(nn.Module):
 
     def calc_priorities(self, target_net, transitions, n_burn_in=40,
                         eta=0.9, gamma=0.997,
-                        detach=False,
                         device=torch.device("cpu")):
         n_transitions = len(transitions)
         batch = utils.Sequence(*zip(*transitions))
@@ -120,6 +116,8 @@ class DuelingLSTMDQN(nn.Module):
                                list(zip(*(batch.recurrent_state))))
         self.set_state((torch.cat(batch.recurrent_state[0]),
                         torch.cat(batch.recurrent_state[1])), device)
+        target_net.set_state((torch.cat(batch.recurrent_state[0]),
+                              torch.cat(batch.recurrent_state[1])), device)
 
         # burn-in
         with torch.no_grad():
@@ -127,6 +125,7 @@ class DuelingLSTMDQN(nn.Module):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
                 state_batch = torch.stack(trans.state).to(device)
                 self.forward(state_batch)
+                target_net.forward(state_batch)
 
         n_sequence = len(batch.transitions)
         delta = torch.zeros(n_sequence-n_burn_in-1, n_transitions, 1, device=device)
@@ -144,7 +143,6 @@ class DuelingLSTMDQN(nn.Module):
             expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) * gamma) + reward_batch)
             delta[t - n_burn_in] = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
             trans0 = trans1
-        if detach:
-            delta.detach_()
+
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)
         return delta.sum(dim=0), prios.detach()

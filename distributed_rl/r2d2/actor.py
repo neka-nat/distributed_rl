@@ -12,10 +12,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Actor(actor.Actor):
     EPS_START = 1.0
     EPS_END = 0.1
-    def __init__(self, name, env, policy_net, vis, hostname='localhost',
+    def __init__(self, name, env, policy_net, target_net, vis, hostname='localhost',
                  batch_size=20, target_update=400, eps_decay=20000):
         super(Actor, self).__init__(name, env, policy_net, vis, hostname,
                                     batch_size, target_update, eps_decay)
+        self._target_net = target_net
+        self._target_net.load_state_dict(self._policy_net.state_dict())
+        self._target_net.eval()
 
     def run(self, n_burn_in=40, n_sequence=80, nstep_return=5, gamma=0.997,
             clip=lambda x: x):
@@ -61,9 +64,8 @@ class Actor(actor.Actor):
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 recurrent_state = self._policy_net.get_state()
-                _, prio = self._policy_net.calc_priorities(self._policy_net, samples,
-                                                           gamma=gamma_nsteps[-1],
-                                                           detach=True, device=device)
+                _, prio = self._policy_net.calc_priorities(self._target_net, samples,
+                                                           gamma=gamma_nsteps[-1], device=device)
                 self._policy_net.set_state(recurrent_state, device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',
@@ -72,3 +74,4 @@ class Actor(actor.Actor):
 
             if t % self._target_update == 0:
                 self._pull_params()
+                self._target_net.load_state_dict(self._policy_net.state_dict())
