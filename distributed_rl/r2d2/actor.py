@@ -32,6 +32,8 @@ class Actor(actor.Actor):
         sum_rwd = 0
         n_episode = 0
         for t in count():
+            if len(sequence_buffer) == n_sequence - n_burn_in - step_buffer.maxlen:
+                recurrent_state_buffer.append(self._policy_net.get_state())
             # Select and perform an action
             eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
@@ -43,8 +45,6 @@ class Actor(actor.Actor):
             if len(step_buffer) == step_buffer.maxlen:
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])
                 sequence_buffer.append(utils.Transition(step_buffer[0].state, step_buffer[0].action, r_nstep))
-            if len(sequence_buffer) == n_sequence - n_burn_in:
-                recurrent_state_buffer.append(self._policy_net.get_state())
             if len(sequence_buffer) == n_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer, recurrent_state_buffer[0]))
                 sequence_buffer = sequence_buffer[-n_burn_in:]
