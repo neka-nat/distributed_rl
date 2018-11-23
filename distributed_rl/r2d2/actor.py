@@ -19,20 +19,23 @@ class Actor(actor.Actor):
         self._target_net = target_net
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
+        self._n_burn_in = self._policy_net.n_burn_in
 
-    def run(self, n_burn_in=40, n_sequence=80, nstep_return=5, gamma=0.997,
+    def run(self, n_overlap=40, n_sequence=80, nstep_return=5, gamma=0.997,
             clip=lambda x: x):
-        assert n_burn_in < n_sequence, "n_burn_in must be less than n_sequence."
+        assert n_overlap < n_sequence, "n_overlap must be less than n_sequence."
         state = self._env.reset()
         step_buffer = deque(maxlen=nstep_return)
         recurrent_state_buffer = deque(maxlen=2)
         sequence_buffer = []
+        n_total_sequence = self._n_burn_in + n_sequence
+        n_total_overlap = self._n_burn_in + n_overlap
         gamma_nsteps = [gamma ** i for i in range(nstep_return + 1)]
         recurrent_state_buffer.append(self._policy_net.get_state())
         sum_rwd = 0
         n_episode = 0
         for t in count():
-            if len(sequence_buffer) == n_sequence - n_burn_in - step_buffer.maxlen:
+            if len(sequence_buffer) == n_total_sequence - n_total_overlap - step_buffer.maxlen:
                 recurrent_state_buffer.append(self._policy_net.get_state())
             # Select and perform an action
             eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
@@ -45,9 +48,9 @@ class Actor(actor.Actor):
             if len(step_buffer) == step_buffer.maxlen:
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])
                 sequence_buffer.append(utils.Transition(step_buffer[0].state, step_buffer[0].action, r_nstep))
-            if len(sequence_buffer) == n_sequence:
+            if len(sequence_buffer) == n_total_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer, recurrent_state_buffer[0]))
-                sequence_buffer = sequence_buffer[-n_burn_in:]
+                sequence_buffer = sequence_buffer[-n_total_overlap:]
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()

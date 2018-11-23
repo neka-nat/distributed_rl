@@ -47,10 +47,12 @@ class DuelingDQN(nn.Module):
         return delta, prios.detach()
 
 class DuelingLSTMDQN(nn.Module):
-    def __init__(self, n_action, batch_size, input_shape=(4, 84, 84)):
+    def __init__(self, n_action, batch_size,
+                 n_burn_in=40, input_shape=(4, 84, 84)):
         super(DuelingLSTMDQN, self).__init__()
         self.n_action = n_action
         self.batch_size = batch_size
+        self.n_burn_in = n_burn_in
         self.conv1 = nn.Conv2d(input_shape[0], 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
@@ -107,7 +109,7 @@ class DuelingLSTMDQN(nn.Module):
             val = self.val2(val)
             return val + adv - adv.mean(1, keepdim=True)
 
-    def calc_priorities(self, target_net, transitions, n_burn_in=40,
+    def calc_priorities(self, target_net, transitions,
                         eta=0.9, gamma=0.997,
                         device=torch.device("cpu")):
         n_transitions = len(transitions)
@@ -121,16 +123,16 @@ class DuelingLSTMDQN(nn.Module):
 
         # burn-in
         with torch.no_grad():
-            for t in range(n_burn_in):
+            for t in range(self.n_burn_in):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
                 state_batch = torch.stack(trans.state).to(device)
                 self.forward(state_batch)
                 target_net.forward(state_batch)
 
         n_sequence = len(batch.transitions)
-        delta = torch.zeros(n_sequence-n_burn_in-1, n_transitions, 1, device=device)
-        trans0 = utils.Transition(*zip(*(batch.transitions[n_burn_in])))
-        for t in range(n_burn_in, n_sequence - 1):
+        delta = torch.zeros(n_sequence - self.n_burn_in - 1, n_transitions, 1, device=device)
+        trans0 = utils.Transition(*zip(*(batch.transitions[self.n_burn_in])))
+        for t in range(self.n_burn_in, n_sequence - 1):
             trans1 = utils.Transition(*zip(*(batch.transitions[t + 1])))
             state_batch = torch.stack(trans0.state).to(device)
             action_batch = torch.stack(trans0.action).to(device)
@@ -141,7 +143,7 @@ class DuelingLSTMDQN(nn.Module):
             next_action = self.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
             next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
             expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) * gamma) + reward_batch)
-            delta[t - n_burn_in] = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
+            delta[t - self.n_burn_in] = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
             trans0 = trans1
 
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)
