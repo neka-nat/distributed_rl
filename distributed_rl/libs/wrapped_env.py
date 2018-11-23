@@ -47,42 +47,29 @@ class MultiFrameAtariEnv(AtariEnv):
 
 from gym.envs.registration import register
 
-register(
-    id='MultiFramePong-v0',
-    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
-    kwargs={'obs_type': 'image'},
-    max_episode_steps=10000,
-    nondeterministic=False,
-)
+for game in ['air_raid', 'alien', 'amidar', 'assault', 'asterix', 'asteroids', 'atlantis',
+    'bank_heist', 'battle_zone', 'beam_rider', 'berzerk', 'bowling', 'boxing', 'breakout', 'carnival',
+    'centipede', 'chopper_command', 'crazy_climber', 'demon_attack', 'double_dunk',
+    'elevator_action', 'enduro', 'fishing_derby', 'freeway', 'frostbite', 'gopher', 'gravitar',
+    'hero', 'ice_hockey', 'jamesbond', 'journey_escape', 'kangaroo', 'krull', 'kung_fu_master',
+    'montezuma_revenge', 'ms_pacman', 'name_this_game', 'phoenix', 'pitfall', 'pong', 'pooyan',
+    'private_eye', 'qbert', 'riverraid', 'road_runner', 'robotank', 'seaquest', 'skiing',
+    'solaris', 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down',
+    'venture', 'video_pinball', 'wizard_of_wor', 'yars_revenge', 'zaxxon']:
 
-register(
-    id='MultiFrameBreakout-v0',
-    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
-    kwargs={'game': 'breakout', 'obs_type': 'image'},
-    max_episode_steps=10000,
-    nondeterministic=False,
-)
+    name = ''.join([g.capitalize() for g in game.split('_')])
+    register(
+        id='MultiFrame{}-v0'.format(name),
+        entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
+        kwargs={'game': game, 'obs_type': 'image'},
+        max_episode_steps=10000,
+        nondeterministic=False,
+    )
 
-register(
-    id='SingleFrameBreakout-v0',
-    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
-    kwargs={'game': 'breakout', 'obs_type': 'image', 'buf_size': 1, 'gray': False},
-    max_episode_steps=10000,
-    nondeterministic=False,
-)
-
-register(
-    id='MultiFrameCentipede-v0',
-    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
-    kwargs={'game': 'centipede', 'obs_type': 'image'},
-    max_episode_steps=10000,
-    nondeterministic=False,
-)
-
-register(
-    id='MultiFrameSpaceInvaders-v0',
-    entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
-    kwargs={'game': 'space_invaders', 'obs_type': 'image'},
-    max_episode_steps=10000,
-    nondeterministic=False,
-)
+    register(
+        id='SingleFrame{}-v0'.format(name),
+        entry_point='distributed_rl.libs.wrapped_env:MultiFrameAtariEnv',
+        kwargs={'game': name, 'obs_type': 'image', 'buf_size': 1, 'gray': False},
+        max_episode_steps=10000,
+        nondeterministic=False,
+    )
