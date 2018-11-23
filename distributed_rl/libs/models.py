@@ -61,14 +61,14 @@ class DuelingLSTMDQN(nn.Module):
         self.adv2 = nn.Linear(512, self.n_action)
         self.val1 = nn.Linear(512, 512)
         self.val2 = nn.Linear(512, 1)
-        self.cx = torch.zeros(self.batch_size, 512)
         self.hx = torch.zeros(self.batch_size, 512)
+        self.cx = torch.zeros(self.batch_size, 512)
         self._grad_mode = True
 
     def to(self, device):
         super(DuelingLSTMDQN, self).to(device)
-        self.cx = self.cx.to(device)
         self.hx = self.hx.to(device)
+        self.cx = self.cx.to(device)
         return self
 
     def train(self, mode=True):
@@ -80,11 +80,11 @@ class DuelingLSTMDQN(nn.Module):
         return self.train(False)
 
     def reset(self, done=False):
-        self.cx.detach_()
         self.hx.detach_()
+        self.cx.detach_()
         if done:
-            self.cx.zero_()
             self.hx.zero_()
+            self.cx.zero_()
 
     def get_state(self):
         return self.hx.detach().cpu(), self.cx.detach().cpu()
