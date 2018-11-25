@@ -23,6 +23,7 @@ class Actor(actor.Actor):
 
     def run(self, n_overlap=40, n_sequence=80, nstep_return=5, gamma=0.997,
             clip=lambda x: x):
+        assert n_sequence > 1, "n_sequence must be more than 1."
         assert n_overlap < n_sequence, "n_overlap must be less than n_sequence."
         state = self._env.reset()
         step_buffer = deque(maxlen=nstep_return)
@@ -50,7 +51,7 @@ class Actor(actor.Actor):
                 sequence_buffer.append(utils.Transition(step_buffer[0].state, step_buffer[0].action, r_nstep))
             if len(sequence_buffer) == n_total_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer, recurrent_state_buffer[0]))
-                sequence_buffer = sequence_buffer[-n_total_overlap:]
+                sequence_buffer = sequence_buffer[-n_total_overlap:] if n_total_overlap > 0 else []
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
