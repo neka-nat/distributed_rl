@@ -32,11 +32,11 @@ def main():
         model = models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device)
         learner = Learner(model,
                           models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device),
-                          optim.Adam(model.parameters(), lr=1.0e-4, eps=1.0e-4),
+                          optim.Adam(model.parameters(), lr=1.0e-4, eps=1.0e-3),
                           vis, replay_size=args.replaysize, hostname=args.redisserver,
                           use_memory_compress=True)
         learner.optimize_loop(batch_size=batch_size, nstep_return=5,
-                              gamma=0.997, target_update=2000,
+                              gamma=0.997, beta=0.6, target_update=2000,
                               actor_device=torch.device(actordevice))
     else:
         raise ValueError('Unknown the algorithm: %s.' % args.algorithm)
