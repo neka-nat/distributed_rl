@@ -115,12 +115,17 @@ class DuelingLSTMDQN(nn.Module):
                         eta=0.9, gamma=0.997,
                         device=torch.device("cpu")):
         n_transitions = len(transitions)
+        self_cp = DuelingLSTMDQN(self.n_action, self.batch_size,
+                                 self.n_burn_in, self.nstep_return).to(device)
+        self_cp.load_state_dict(self.state_dict())
+        self_cp.eval()
         batch = utils.Sequence(*zip(*transitions))
         batch = utils.Sequence(list(zip(*(batch.transitions))),
                                list(zip(*(batch.recurrent_state))))
         hx = torch.cat(batch.recurrent_state[0])
         cx = torch.cat(batch.recurrent_state[1])
         self.set_state((hx, cx), device)
+        self_cp.set_state((hx, cx), device)
         target_net.set_state((hx, cx), device)
 
         # burn-in
@@ -129,10 +134,12 @@ class DuelingLSTMDQN(nn.Module):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
                 state_batch = torch.stack(trans.state).to(device)
                 self.forward(state_batch)
+                self_cp.forward(state_batch)
                 target_net.forward(state_batch)
             for t in range(self.n_burn_in, self.n_burn_in + self.nstep_return):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
                 state_batch = torch.stack(trans.state).to(device)
+                self_cp.forward(state_batch)
                 target_net.forward(state_batch)
 
         n_sequence = len(batch.transitions)
@@ -146,7 +153,7 @@ class DuelingLSTMDQN(nn.Module):
             next_state_batch = torch.stack(trans1.state).to(device)
 
             state_action_values = self.forward(state_batch).gather(1, action_batch)
-            next_action = self.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
+            next_action = self_cp.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
             next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
             expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) * gamma) + reward_batch)
             delta[t - self.n_burn_in] = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
