@@ -21,22 +21,24 @@ def main():
     vis = visdom.Visdom(server='http://' + args.visdomserver)
     actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
     if args.algorithm == 'ape_x':
+        nstep_return=3
         model = models.DuelingDQN(env.action_space.n).to(device)
         learner = Learner(model,
                           models.DuelingDQN(env.action_space.n).to(device),
                           optim.RMSprop(model.parameters(), lr=0.00025 / 4, alpha=0.95, eps=1.5e-7),
                           vis, replay_size=args.replaysize, hostname=args.redisserver)
-        learner.optimize_loop(actor_device=torch.device(actordevice))
+        learner.optimize_loop(gamma=0.999**nstep_return, actor_device=torch.device(actordevice))
     elif args.algorithm == 'r2d2':
         batch_size = 64
-        model = models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device)
+        nstep_return=5
+        model = models.DuelingLSTMDQN(env.action_space.n, batch_size, nstep_return).to(device)
         learner = Learner(model,
-                          models.DuelingLSTMDQN(env.action_space.n, batch_size).to(device),
+                          models.DuelingLSTMDQN(env.action_space.n, batch_size, nstep_return).to(device),
                           optim.Adam(model.parameters(), lr=1.0e-4, eps=1.0e-3),
                           vis, replay_size=args.replaysize, hostname=args.redisserver,
                           use_memory_compress=True)
-        learner.optimize_loop(batch_size=batch_size, nstep_return=5,
-                              gamma=0.997, beta=0.6, target_update=2000,
+        learner.optimize_loop(batch_size=batch_size, gamma=0.997**nstep_return,
+                              beta=0.6, target_update=2000,
                               actor_device=torch.device(actordevice))
     else:
         raise ValueError('Unknown the algorithm: %s.' % args.algorithm)
