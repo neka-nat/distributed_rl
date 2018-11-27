@@ -39,7 +39,8 @@ class Learner(object):
         self._memory.start()
 
     def optimize_loop(self, batch_size=512, gamma=0.999**3,
-                      beta=0.4, fit_timing=100, target_update=1000, actor_device=device):
+                      beta=0.4, max_grad_norm=40,
+                      fit_timing=100, target_update=1000, actor_device=device):
         for t in count():
             if len(self._memory) < batch_size:
                 continue
@@ -55,8 +56,7 @@ class Learner(object):
             # Optimize the model
             self._optimizer.zero_grad()
             loss.backward()
-            for param in self._policy_net.parameters():
-                param.grad.data.clamp_(-1, 1)
+            torch.nn.utils.clip_grad_norm_(self._policy_net.parameters(), max_grad_norm)
             self._memory.update_priorities(indices,
                                            prio.squeeze(1).cpu().numpy().tolist())
             self._optimizer.step()
