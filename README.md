@@ -4,7 +4,7 @@ This is pytorch implementation of distributed deep reinforcement learning.
 
 * ape-x
     * [Distributed Prioritized Experience Replay](https://arxiv.org/abs/1803.00933)
-* r2d2 (experimental)
+* r2d2 (Recurrent Replay Distributed DQN)(experimental)
     * [Recurrent Experience Replay in Distributed Reinforcement Learning](https://openreview.net/forum?id=r1lyTjAqYX)
 
 ![image](images/image.gif)
