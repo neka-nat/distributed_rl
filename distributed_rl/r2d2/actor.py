@@ -27,17 +27,15 @@ class Actor(actor.Actor):
         assert n_overlap < n_sequence, "n_overlap must be less than n_sequence."
         state = self._env.reset()
         step_buffer = deque(maxlen=nstep_return)
-        recurrent_state_buffer = deque(maxlen=2)
         sequence_buffer = []
+        recurrent_state_buffer = []
         n_total_sequence = self._n_burn_in + n_sequence
         n_total_overlap = self._n_burn_in + n_overlap
         gamma_nsteps = [gamma ** i for i in range(nstep_return + 1)]
-        recurrent_state_buffer.append(self._policy_net.get_state())
         sum_rwd = 0
         n_episode = 0
         for t in count():
-            if len(sequence_buffer) == n_total_sequence - n_total_overlap - step_buffer.maxlen:
-                recurrent_state_buffer.append(self._policy_net.get_state())
+            recurrent_state_buffer.append(self._policy_net.get_state())
             # Select and perform an action
             eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
@@ -52,6 +50,8 @@ class Actor(actor.Actor):
             if len(sequence_buffer) == n_total_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer, recurrent_state_buffer[0]))
                 sequence_buffer = sequence_buffer[-n_total_overlap:] if n_total_overlap > 0 else []
+                recurrent_state_buffer = recurrent_state_buffer[-(n_total_overlap + step_buffer.maxlen - 1):] \
+                                         if n_total_overlap + step_buffer.maxlen - 1 else []
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             sum_rwd += reward.numpy()
@@ -63,8 +63,8 @@ class Actor(actor.Actor):
                 n_episode += 1
                 step_buffer.clear()
                 sequence_buffer = []
+                recurrent_state_buffer = []
                 self._policy_net.reset(done)
-                recurrent_state_buffer.append(self._policy_net.get_state())
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 recurrent_state = self._policy_net.get_state()
