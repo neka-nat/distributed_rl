@@ -31,9 +31,11 @@ def main():
     elif args.algorithm == 'r2d2':
         batch_size = 64
         nstep_return=5
-        model = models.DuelingLSTMDQN(env.action_space.n, batch_size, nstep_return).to(device)
+        model = models.DuelingLSTMDQN(env.action_space.n, batch_size,
+                                      nstep_return=nstep_return).to(device)
         learner = Learner(model,
-                          models.DuelingLSTMDQN(env.action_space.n, batch_size, nstep_return).to(device),
+                          models.DuelingLSTMDQN(env.action_space.n, batch_size,
+                                                nstep_return=nstep_return).to(device),
                           optim.Adam(model.parameters(), lr=1.0e-4, eps=1.0e-3),
                           vis, replay_size=args.replaysize, hostname=args.redisserver,
                           use_memory_compress=True)

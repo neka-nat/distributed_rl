@@ -25,8 +25,10 @@ def main():
         from distributed_rl.r2d2.actor import Actor
         nstep_return=5
         actor = Actor(args.name, env,
-                      models.DuelingLSTMDQN(env.action_space.n, 1, nstep_return).to(device),
-                      models.DuelingLSTMDQN(env.action_space.n, 1, nstep_return).to(device),
+                      models.DuelingLSTMDQN(env.action_space.n, 1,
+                                            nstep_return=nstep_return).to(device),
+                      models.DuelingLSTMDQN(env.action_space.n, 1,
+                                            nstep_return=nstep_return).to(device),
                       vis, hostname=args.redisserver, eps_decay=args.eps_decay)
     else:
         raise ValueError('Unknown the algorithm: %s.' % args.algorithm)
