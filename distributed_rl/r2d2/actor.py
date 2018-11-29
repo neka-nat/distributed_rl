@@ -42,7 +42,6 @@ class Actor(actor.Actor):
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
             reward = torch.tensor([clip(reward)])
-            done = torch.tensor([float(done)])
             step_buffer.append(utils.Transition(torch.from_numpy(state), action, reward))
             if len(step_buffer) == step_buffer.maxlen:
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])

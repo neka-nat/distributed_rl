@@ -24,9 +24,13 @@ class TestUtils(unittest.TestCase):
         torch.testing.assert_allclose(src, dst)
 
     def test_rescale(self):
-        src = torch.rand(10)
-        dst1 = utils.inv_rescale(utils.rescale(src))
-        dst2 = utils.rescale(utils.inv_rescale(src))
+        src = 10 * (torch.rand(10) * 2.0 - 1.0)
+        dst1 = utils.inv_rescale(utils.rescale(src, 0.1), 0.1)
+        dst2 = utils.rescale(utils.inv_rescale(src, 0.1), 0.1)
+        torch.testing.assert_allclose(src, dst1)
+        torch.testing.assert_allclose(src, dst2)
+        dst1 = utils.inv_rescale(utils.rescale(src, 0), 0)
+        dst2 = utils.rescale(utils.inv_rescale(src, 0), 0)
         torch.testing.assert_allclose(src, dst1)
         torch.testing.assert_allclose(src, dst2)
 
