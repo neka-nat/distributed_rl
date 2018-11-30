@@ -30,7 +30,7 @@ def main():
         learner.optimize_loop(gamma=0.999**nstep_return, actor_device=torch.device(actordevice))
     elif args.algorithm == 'r2d2':
         batch_size = 64
-        nstep_return=5
+        nstep_return = 5
         model = models.DuelingLSTMDQN(env.action_space.n, batch_size,
                                       nstep_return=nstep_return).to(device)
         learner = Learner(model,

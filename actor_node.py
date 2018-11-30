@@ -23,7 +23,7 @@ def main():
                       vis, hostname=args.redisserver, eps_decay=args.eps_decay)
     elif args.algorithm == 'r2d2':
         from distributed_rl.r2d2.actor import Actor
-        nstep_return=5
+        nstep_return = 5
         actor = Actor(args.name, env,
                       models.DuelingLSTMDQN(env.action_space.n, 1,
                                             nstep_return=nstep_return).to(device),
