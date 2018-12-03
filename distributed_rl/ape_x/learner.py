@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import time
 import numpy as np
 from itertools import count
@@ -43,7 +44,8 @@ class Learner(object):
 
     def optimize_loop(self, batch_size=512, gamma=0.999**3,
                       beta=0.4, max_grad_norm=40,
-                      fit_timing=100, target_update=1000, actor_device=device):
+                      fit_timing=100, target_update=1000, actor_device=device,
+                      save_timing=10000, save_model_dir='./models'):
         for t in count():
             if len(self._memory) < batch_size:
                 continue
@@ -73,4 +75,6 @@ class Learner(object):
                                win=self._win, update='append')
             if t % target_update == 0:
                 self._target_net.load_state_dict(self._policy_net.state_dict())
+            if t % save_timing == 0:
+                torch.save(self._policy_net.state_dict(), os.path.join(save_model_dir, 'model_%d.pth' % t))
             time.sleep(0.01)
