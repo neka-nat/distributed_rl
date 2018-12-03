@@ -15,15 +15,17 @@ class Learner(object):
     Args:
         policy_net (torch.nn.Module): Q-function network
         target_net (torch.nn.Module): target network
-        optimizer (torch.optim.Optimizer, optional): optimizer
+        optimizer (torch.optim.Optimizer): optimizer
         vis (visdom.Visdom): visdom object
         replay_size (int, optional): size of replay memory
         hostname (str, optional): host name of redis server
         use_memory_compress (bool, optional): use the compressed replay memory for saved memory
+        use_disk_cache (bool, optional): use the disk cache to save experience
     """
     def __init__(self, policy_net, target_net, optimizer,
                  vis, replay_size=30000, hostname='localhost',
-                 use_memory_compress=False):
+                 use_memory_compress=False,
+                 use_disk_cache=False):
         self._vis = vis
         self._policy_net = policy_net
         self._target_net = target_net
@@ -35,7 +37,8 @@ class Learner(object):
         self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
                              opts=dict(title='Memory size'))
         self._memory = replay.Replay(replay_size, self._connect,
-                                     use_compress=use_memory_compress)
+                                     use_compress=use_memory_compress,
+                                     use_disk=use_disk_cache)
         self._memory.start()
 
     def optimize_loop(self, batch_size=512, gamma=0.999**3,

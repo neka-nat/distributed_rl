@@ -25,7 +25,7 @@
 		"while fuser -s /var/lib/dpkg/lock; do echo 'apt-get is waiting for the lock release ...'; sleep 1; done;",
 		"sudo apt-get -y update",
 		"sudo apt-get -y install git redis-server",
-		"pip install torch gym redis pillow atari-py visdom numpy lz4",
+		"pip install torch gym redis pillow atari-py visdom numpy lz4 diskcache",
 		"git clone https://github.com/neka-nat/distributed_rl.git",
 		"sudo mv /tmp/redis.conf /etc/redis/redis.conf",
 		"sudo service redis restart"

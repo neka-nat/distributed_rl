@@ -15,7 +15,7 @@ def main():
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
     parser.add_argument('-d', '--actordevice', type=str, default='', help="Actor's device.")
-    parser.add_argument('-s', '--replaysize', type=int, default=30000, help="Replay memory size.")
+    parser.add_argument('-s', '--replaysize', type=int, default=100000, help="Replay memory size.")
     args = parser.parse_args()
     env = gym.make(args.env)
     vis = visdom.Visdom(server='http://' + args.visdomserver)
@@ -38,7 +38,8 @@ def main():
                                                 nstep_return=nstep_return).to(device),
                           optim.Adam(model.parameters(), lr=1.0e-4, eps=1.0e-3),
                           vis, replay_size=args.replaysize, hostname=args.redisserver,
-                          use_memory_compress=True)
+                          use_memory_compress=True,
+                          use_disk_cache=True)
         learner.optimize_loop(batch_size=batch_size, gamma=0.997**nstep_return,
                               beta=0.6, target_update=2000,
                               actor_device=torch.device(actordevice))

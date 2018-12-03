@@ -11,12 +11,13 @@ class Replay(threading.Thread):
         size (int, optional): size of memory
         connect (redis.StrictRedis, optional): Redis client object
         use_compress (bool, optional): use the compressed memory for saved memory
+        use_disk (bool, optional): use the disk cache
     """
     def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost'),
-                 use_compress=False):
+                 use_compress=False, use_disk=False):
         super(Replay, self).__init__()
         self.setDaemon(True)
-        self._memory = replay_memory.PrioritizedMemory(size, use_compress)
+        self._memory = replay_memory.PrioritizedMemory(size, use_compress, use_disk)
         self._connect = connect
         self._connect.delete('experience')
         self._lock = threading.Lock()

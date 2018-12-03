@@ -15,6 +15,7 @@ numpy = "*"
 "lz4" = "*"
 "boto3" = "*"
 pyyaml = "*"
+diskcache = "*"
 
 [dev-packages]
 

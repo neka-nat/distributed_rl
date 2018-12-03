@@ -1,31 +1,42 @@
 import random
 from collections import deque
 import numpy as np
+from diskcache import Deque
 from . import utils
 
-class CompressedDeque(deque):
-    def __init__(self, *args, **kargs):
-        super(CompressedDeque, self).__init__(*args, **kargs)
+def generate_deque(use_compress, use_disk):
+    base_cls = deque if not use_disk else Deque
+    if not use_compress:
+        return base_cls
 
-    def __iter__(self):
-        return (utils.loads(v) for v in super(CompressedDeque, self).__iter__())
+    class CompressedDeque(base_cls):
+        def __init__(self, *args, **kargs):
+            super(CompressedDeque, self).__init__(*args, **kargs)
 
-    def append(self, data):
-        super(CompressedDeque, self).append(utils.dumps(data))
+        def __iter__(self):
+            return (utils.loads(v) for v in super(CompressedDeque, self).__iter__())
 
-    def extend(self, datum):
-        for d in datum:
-            self.append(d)
+        def append(self, data):
+            super(CompressedDeque, self).append(utils.dumps(data))
 
-    def __getitem__(self, idx):
-        return utils.loads(super(CompressedDeque, self).__getitem__(idx))
+        def extend(self, datum):
+            for d in datum:
+                self.append(d)
+
+        def __getitem__(self, idx):
+            return utils.loads(super(CompressedDeque, self).__getitem__(idx))
+
+    return CompressedDeque
 
 class ReplayMemory(object):
-    def __init__(self, capacity, use_compress=False):
-        if use_compress:
-            self.memory = CompressedDeque(maxlen=capacity)
+    def __init__(self, capacity,
+                 use_compress=False,
+                 use_disk=False):
+        deque_cls = generate_deque(use_compress, use_disk)
+        if use_disk:
+            self.memory = deque_cls()
         else:
-            self.memory = deque(maxlen=capacity)
+            self.memory = deque_cls(maxlen=capacity)
 
     def push(self, data):
         """Saves a transition."""
@@ -42,12 +53,12 @@ class ReplayMemory(object):
 
 
 class PrioritizedMemory(object):
-    def __init__(self, capacity, use_compress=False):
+    def __init__(self, capacity,
+                 use_compress=False,
+                 use_disk=False):
         self.capacity = capacity
-        if use_compress:
-            self.transitions = CompressedDeque()
-        else:
-            self.transitions = deque()
+        deque_cls = generate_deque(use_compress, use_disk)
+        self.transitions = deque_cls()
         self.priorities = deque()
         self.total_prios = 0.0
     
