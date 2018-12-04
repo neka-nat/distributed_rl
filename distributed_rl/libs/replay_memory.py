@@ -1,13 +1,16 @@
 import random
 from collections import deque
 import numpy as np
-from diskcache import Deque
+from diskcache import Deque, Cache
 from . import utils
 
-def generate_deque(use_compress, use_disk):
+def generate_deque(use_compress=False, use_disk=False, capacity=None):
     base_cls = deque if not use_disk else Deque
     if not use_compress:
-        return base_cls
+        if capacity is None:
+            return base_cls()
+        else:
+            return base_cls(maxlen=capacity)
 
     class CompressedDeque(base_cls):
         def __init__(self, *args, **kargs):
@@ -26,17 +29,22 @@ def generate_deque(use_compress, use_disk):
         def __getitem__(self, idx):
             return utils.loads(super(CompressedDeque, self).__getitem__(idx))
 
-    return CompressedDeque
+    if use_disk:
+        cache = Cache('/tmp/experience', size_limit=int(1e11))
+        return CompressedDeque.fromcache(cache)
+    if capacity is None:
+        return CompressedDeque()
+    else:
+        return CompressedDeque(maxlen=capacity)
 
 class ReplayMemory(object):
     def __init__(self, capacity,
                  use_compress=False,
                  use_disk=False):
-        deque_cls = generate_deque(use_compress, use_disk)
         if use_disk:
-            self.memory = deque_cls()
+            self.memory = generate_deque(use_compress, use_disk)
         else:
-            self.memory = deque_cls(maxlen=capacity)
+            self.memory = generate_deque(use_compress, use_disk, capacity)
 
     def push(self, data):
         """Saves a transition."""
@@ -57,8 +65,7 @@ class PrioritizedMemory(object):
                  use_compress=False,
                  use_disk=False):
         self.capacity = capacity
-        deque_cls = generate_deque(use_compress, use_disk)
-        self.transitions = deque_cls()
+        self.transitions = generate_deque(use_compress, use_disk)
         self.priorities = deque()
         self.total_prios = 0.0
     

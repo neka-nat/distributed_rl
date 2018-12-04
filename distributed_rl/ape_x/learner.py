@@ -56,7 +56,7 @@ class Learner(object):
             total = len(self._memory)
             weights = (total * prio.cpu().numpy()) ** (-beta)
             weights /= weights.max()
-            loss = (delta * torch.from_numpy(np.expand_dims(weights, 1)).to(device)).mean()
+            loss = (delta * torch.from_numpy(np.expand_dims(weights, 1).astype(np.float32)).to(device)).mean()
 
             # Optimize the model
             self._optimizer.zero_grad()
@@ -74,7 +74,9 @@ class Learner(object):
                 self._vis.line(X=np.array([t]), Y=np.array([len(self._memory)]),
                                win=self._win, update='append')
             if t % target_update == 0:
+                print('[Learner] Update target.')
                 self._target_net.load_state_dict(self._policy_net.state_dict())
             if t % save_timing == 0:
+                print('[Learner] Save model.')
                 torch.save(self._policy_net.state_dict(), os.path.join(save_model_dir, 'model_%d.pth' % t))
             time.sleep(0.01)
