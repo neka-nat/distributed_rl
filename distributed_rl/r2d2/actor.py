@@ -6,16 +6,15 @@ import redis
 import torch
 from ..ape_x import actor
 from ..libs import replay_memory, utils
-# if gpu is to be used
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Actor(actor.Actor):
     EPS_START = 1.0
     EPS_END = 0.1
     def __init__(self, name, env, policy_net, target_net, vis, hostname='localhost',
-                 batch_size=20, target_update=400, eps_decay=20000):
+                 batch_size=20, target_update=400, eps_decay=20000,
+                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         super(Actor, self).__init__(name, env, policy_net, vis, hostname,
-                                    batch_size, target_update, eps_decay)
+                                    batch_size, target_update, eps_decay, device)
         self._target_net = target_net
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
@@ -38,7 +37,7 @@ class Actor(actor.Actor):
             recurrent_state_buffer.append(self._policy_net.get_state())
             # Select and perform an action
             eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
-            action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
+            action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
             reward = torch.tensor([clip(reward)])
@@ -68,8 +67,9 @@ class Actor(actor.Actor):
                 samples = self._local_memory.sample(self._batch_size)
                 recurrent_state = self._policy_net.get_state()
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples,
-                                                           gamma=gamma_nsteps[-1], device=device)
-                self._policy_net.set_state(recurrent_state, device)
+                                                           gamma=gamma_nsteps[-1],
+                                                           device=self._device)
+                self._policy_net.set_state(recurrent_state, self._device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',
                                     utils.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))

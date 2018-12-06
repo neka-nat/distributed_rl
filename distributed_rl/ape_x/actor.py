@@ -5,8 +5,6 @@ from collections import deque
 import redis
 import torch
 from ..libs import replay_memory, utils
-# if gpu is to be used
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Actor(object):
     """Actor of Ape-X
@@ -20,11 +18,13 @@ class Actor(object):
         batch_size (int, optional): batch data size when sending to learner
         target_update (int, optional): update frequency of the target network
         eps_decay (int, optional): decay of random action rate in e-greedy
+        device (torch.device, optional): calculation device
     """
     EPS_START = 1.0
     EPS_END = 0.1
     def __init__(self, name, env, policy_net, vis, hostname='localhost',
-                 batch_size=50, target_update=200, eps_decay=20000):
+                 batch_size=50, target_update=200, eps_decay=20000,
+                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         self._env = env
         self._name = name
         self._vis = vis
@@ -33,6 +33,7 @@ class Actor(object):
         self._eps_decay = eps_decay
         self._policy_net = policy_net
         self._policy_net.eval()
+        self._device = device
         self._win1 = self._vis.image(utils.preprocess(self._env.env._get_image()))
         self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0.0]),
                                     opts=dict(title='Score %s' % self._name))
@@ -55,7 +56,7 @@ class Actor(object):
         for t in count():
             # Select and perform an action
             eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
-            action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(device),
+            action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
             reward = torch.tensor([clip(reward)])
@@ -79,7 +80,8 @@ class Actor(object):
             if len(self._local_memory) > self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._policy_net, samples,
-                                                           gamma=gamma_nsteps[-1], device=device)
+                                                           gamma=gamma_nsteps[-1],
+                                                           device=self._device)
                 print("[%s] Publish experience." % self._name)
                 self._connect.rpush('experience',
                                     utils.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))

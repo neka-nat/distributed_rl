@@ -4,7 +4,6 @@ import gym
 import torch
 import visdom
 from distributed_rl.libs import wrapped_env, models
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def main():
     parser = argparse.ArgumentParser(description='Actor process for distributed reinforcement.')
@@ -17,10 +16,12 @@ def main():
     args = parser.parse_args()
     vis = visdom.Visdom(server='http://' + args.visdomserver)
     env = gym.make(args.env)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if args.algorithm == 'ape_x':
         from distributed_rl.ape_x.actor import Actor
         actor = Actor(args.name, env, models.DuelingDQN(env.action_space.n).to(device),
-                      vis, hostname=args.redisserver, eps_decay=args.eps_decay)
+                      vis, hostname=args.redisserver, eps_decay=args.eps_decay,
+                      device=device)
     elif args.algorithm == 'r2d2':
         from distributed_rl.r2d2.actor import Actor
         nstep_return = 5
@@ -29,7 +30,8 @@ def main():
                                             nstep_return=nstep_return).to(device),
                       models.DuelingLSTMDQN(env.action_space.n, 1,
                                             nstep_return=nstep_return).to(device),
-                      vis, hostname=args.redisserver, eps_decay=args.eps_decay)
+                      vis, hostname=args.redisserver, eps_decay=args.eps_decay,
+                      device=device)
     else:
         raise ValueError('Unknown the algorithm: %s.' % args.algorithm)
     actor.run()
