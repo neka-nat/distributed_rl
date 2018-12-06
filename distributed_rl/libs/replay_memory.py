@@ -30,7 +30,9 @@ def generate_deque(use_compress=False, use_disk=False, capacity=None):
             return utils.loads(super(CompressedDeque, self).__getitem__(idx))
 
     if use_disk:
-        cache = Cache('/tmp/experience', eviction_policy=u'least-frequently-used')
+        cache = Cache('/tmp/experience',
+                      eviction_policy=u'least-frequently-used',
+                      sqlite_mmap_size=int(4e9))
         cache.clear()
         return CompressedDeque.fromcache(cache)
     if capacity is None:
