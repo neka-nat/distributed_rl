@@ -54,7 +54,7 @@ class Learner(object):
                                                            transitions, gamma=gamma,
                                                            device=device)
             total = len(self._memory)
-            weights = (total * prio.cpu().numpy()) ** (-beta)
+            weights = (total * prio.cpu().numpy() / self._memory.total_prios) ** (-beta)
             weights /= weights.max()
             loss = (delta * torch.from_numpy(np.expand_dims(weights, 1).astype(np.float32)).to(device)).mean()
 
