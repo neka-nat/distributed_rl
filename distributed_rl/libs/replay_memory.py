@@ -79,6 +79,7 @@ class PrioritizedMemory(object):
         
     def sample(self, batch_size):
         batch = []
+        probs = []
         idxs = []
         seg = self.total_prios / batch_size
 
@@ -91,7 +92,8 @@ class PrioritizedMemory(object):
                 idx += 1
             idxs.append(idx)
             batch.append(self.transitions[idx])
-        return batch, idxs
+            probs.append(self.priorities[idx] / self.total_prios)
+        return batch, probs, idxs
     
     def update_priorities(self, indices, priorities):
         for idx, prio in zip(indices, priorities):

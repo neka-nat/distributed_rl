@@ -49,13 +49,13 @@ class Learner(object):
         for t in count():
             if len(self._memory) < batch_size:
                 continue
-            transitions, indices = self._memory.sample(batch_size)
+            transitions, probs, indices = self._memory.sample(batch_size)
+            total = len(self._memory)
+            weights = (total * np.array(probs)) ** (-beta)
+            weights /= weights.max()
             delta, prio = self._policy_net.calc_priorities(self._target_net,
                                                            transitions, gamma=gamma,
                                                            device=device)
-            total = len(self._memory)
-            weights = (total * prio.cpu().numpy() / self._memory.total_prios) ** (-beta)
-            weights /= weights.max()
             loss = (delta * torch.from_numpy(np.expand_dims(weights, 1).astype(np.float32)).to(device)).mean()
 
             # Optimize the model
