@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"6aeadf3" = {file = "http://download.pytorch.org/whl/cu92/torch-0.4.1-cp36-cp36m-linux_x86_64.whl"}
 redis = "*"
 pillow = "*"
 gym = "*"
@@ -16,6 +15,7 @@ numpy = "*"
 "boto3" = "*"
 pyyaml = "*"
 diskcache = "*"
+"73bf4ee" = {file = "http://download.pytorch.org/whl/cu100/torch-1.0.0-cp36-cp36m-linux_x86_64.whl"}
 
 [dev-packages]
 
