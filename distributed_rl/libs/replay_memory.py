@@ -2,7 +2,7 @@ import random
 from collections import deque
 import numpy as np
 from diskcache import Deque, Cache
-from . import utils
+from . import utils, sumtree
 
 def generate_deque(use_compress=False, use_disk=False, capacity=None):
     base_cls = deque if not use_disk else Deque
@@ -69,35 +69,18 @@ class PrioritizedMemory(object):
                  use_disk=False):
         self.capacity = capacity
         self.transitions = generate_deque(use_compress, use_disk)
-        self.priorities = deque()
-        self.total_prios = 0.0
+        self.priorities = sumtree.SumTree()
     
     def push(self, transitions, priorities):
         self.transitions.extend(transitions)
         self.priorities.extend(priorities)
-        self.total_prios += sum(priorities)
         
     def sample(self, batch_size):
-        batch = []
-        probs = []
-        idxs = []
-        seg = self.total_prios / batch_size
-
-        idx = -1
-        sum_p = 0
-        for i in range(batch_size):
-            s = random.uniform(seg * i, seg * (i + 1))
-            while sum_p < s:
-                sum_p += self.priorities[idx]
-                idx += 1
-            idxs.append(idx)
-            batch.append(self.transitions[idx])
-            probs.append(self.priorities[idx] / self.total_prios)
-        return batch, probs, idxs
+        idxs,  prios = self.priorities.prioritized_sample(batch_size)
+        return [self.transitions[i] for i in idxs], prios, idxs
     
     def update_priorities(self, indices, priorities):
         for idx, prio in zip(indices, priorities):
-            self.total_prios += (prio - self.priorities[idx])
             self.priorities[idx] = prio
 
     def remove_to_fit(self):
@@ -105,8 +88,10 @@ class PrioritizedMemory(object):
             return
         for _ in range(len(self.priorities) - self.capacity):
             self.transitions.popleft()
-            p = self.priorities.popleft()
-            self.total_prios -= p
+            self.priorities.popleft()
 
     def __len__(self):
         return len(self.transitions)
+
+    def total_prios(self):
+        return self.priorities.root.value

@@ -49,9 +49,9 @@ class Learner(object):
         for t in count():
             if len(self._memory) < batch_size:
                 continue
-            transitions, probs, indices = self._memory.sample(batch_size)
+            transitions, prios, indices = self._memory.sample(batch_size)
             total = len(self._memory)
-            weights = (total * np.array(probs)) ** (-beta)
+            weights = (total * np.array(prios) / self._memory.total_prios) ** (-beta)
             weights /= weights.max()
             delta, prio = self._policy_net.calc_priorities(self._target_net,
                                                            transitions, gamma=gamma,

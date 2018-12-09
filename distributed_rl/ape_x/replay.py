@@ -49,3 +49,7 @@ class Replay(threading.Thread):
 
     def __len__(self):
         return len(self._memory)
+
+    @property
+    def total_prios(self):
+        return self._memory.total_prios()
