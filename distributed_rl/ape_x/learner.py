@@ -42,6 +42,10 @@ class Learner(object):
                                      use_disk=use_disk_cache)
         self._memory.start()
 
+    def _sleep(self):
+        mlen = self._connect.llen('experience')
+        time.sleep(0.01 * mlen)
+
     def optimize_loop(self, batch_size=512, gamma=0.999**3,
                       beta=0.4, max_grad_norm=40,
                       fit_timing=100, target_update=1000, actor_device=device,
@@ -79,4 +83,4 @@ class Learner(object):
             if t % save_timing == 0:
                 print('[Learner] Save model.')
                 torch.save(self._policy_net.state_dict(), os.path.join(save_model_dir, 'model_%d.pth' % t))
-            time.sleep(0.01)
+            self._sleep()

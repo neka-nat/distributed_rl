@@ -21,7 +21,7 @@ def main():
     vis = visdom.Visdom(server='http://' + args.visdomserver)
     actordevice = ("cuda" if torch.cuda.is_available() else "cpu") if args.actordevice == '' else args.actordevice
     if args.algorithm == 'ape_x':
-        nstep_return=3
+        nstep_return = 3
         model = models.DuelingDQN(env.action_space.n).to(device)
         learner = Learner(model,
                           models.DuelingDQN(env.action_space.n).to(device),
