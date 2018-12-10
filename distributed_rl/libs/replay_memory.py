@@ -31,8 +31,9 @@ def generate_deque(use_compress=False, use_disk=False, capacity=None):
 
     if use_disk:
         cache = Cache('/tmp/experience',
+                      size_limit=int(10e9),
                       eviction_policy=u'least-frequently-used',
-                      sqlite_mmap_size=int(4e9))
+                      sqlite_journal_mode='memory')
         cache.clear()
         return CompressedDeque.fromcache(cache)
     if capacity is None:
