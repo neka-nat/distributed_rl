@@ -11,26 +11,28 @@ class Actor(actor.Actor):
     EPS_START = 1.0
     EPS_END = 0.1
     def __init__(self, name, env, policy_net, target_net, vis, hostname='localhost',
-                 batch_size=20, target_update=400, eps_decay=20000,
+                 batch_size=20, nstep_return=5, gamma=0.997,
+                 clip=lambda x: x,
+                 target_update=400, eps_decay=20000,
                  device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         super(Actor, self).__init__(name, env, policy_net, vis, hostname,
-                                    batch_size, target_update, eps_decay, device)
+                                    batch_size, nstep_return, gamma, clip,
+                                    target_update, eps_decay, device)
         self._target_net = target_net
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
         self._n_burn_in = self._policy_net.n_burn_in
 
-    def run(self, n_overlap=40, n_sequence=80, nstep_return=5, gamma=0.997,
-            clip=lambda x: x):
+    def run(self, n_overlap=40, n_sequence=80):
         assert n_sequence > 1, "n_sequence must be more than 1."
         assert n_overlap < n_sequence, "n_overlap must be less than n_sequence."
         state = self._env.reset()
-        step_buffer = deque(maxlen=nstep_return)
+        step_buffer = deque(maxlen=self._nstep_return)
         sequence_buffer = []
         recurrent_state_buffer = []
         n_total_sequence = self._n_burn_in + n_sequence
         n_total_overlap = self._n_burn_in + n_overlap
-        gamma_nsteps = [gamma ** i for i in range(nstep_return + 1)]
+        gamma_nsteps = [self._gamma ** i for i in range(self._nstep_return + 1)]
         sum_rwd = 0
         n_episode = 0
         for t in count():
@@ -40,7 +42,7 @@ class Actor(actor.Actor):
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
-            reward = torch.tensor([clip(reward)])
+            reward = torch.tensor([self._clip(reward)])
             step_buffer.append(utils.Transition(torch.from_numpy(state), action, reward))
             if len(step_buffer) == step_buffer.maxlen:
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])

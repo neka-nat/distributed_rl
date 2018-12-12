@@ -66,9 +66,10 @@ class Learner(object):
             self._optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self._policy_net.parameters(), max_grad_norm)
+            self._optimizer.step()
+
             self._memory.update_priorities(indices,
                                            prio.squeeze(1).cpu().numpy().tolist())
-            self._optimizer.step()
 
             self._connect.set('params', utils.dumps(self._policy_net.to(actor_device).state_dict()))
             self._policy_net.to(device)
