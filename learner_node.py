@@ -26,7 +26,8 @@ def main():
         learner = Learner(model,
                           models.DuelingDQN(env.action_space.n).to(device),
                           optim.RMSprop(model.parameters(), lr=0.00025 / 4, alpha=0.95, eps=1.5e-7),
-                          vis, replay_size=args.replaysize, hostname=args.redisserver)
+                          vis, replay_size=args.replaysize, hostname=args.redisserver,
+                          use_memory_compress=True)
         learner.optimize_loop(gamma=0.999**nstep_return, actor_device=torch.device(actordevice))
     elif args.algorithm == 'r2d2':
         batch_size = 64
