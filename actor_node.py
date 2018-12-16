@@ -10,7 +10,7 @@ def main():
     parser.add_argument('-n', '--name', type=str, default='actor1', help='Actor name.')
     parser.add_argument('-e', '--env', type=str, default='MultiFrameBreakout-v0', help='Environment name.')
     parser.add_argument('-a', '--algorithm', type=str, default='ape_x', choices=['ape_x', 'r2d2'], help='Select an algorithm.')
-    parser.add_argument('-d', '--eps_decay', type=int, default=20000, help='Decay of random action rate in e-greedy.')
+    parser.add_argument('-d', '--eps_decay', type=int, default=10000000, help='Decay of random action rate in e-greedy.')
     parser.add_argument('-r', '--redisserver', type=str, default='localhost', help="Redis's server name.")
     parser.add_argument('-v', '--visdomserver', type=str, default='localhost', help="Visdom's server name.")
     args = parser.parse_args()

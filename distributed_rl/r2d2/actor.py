@@ -8,12 +8,12 @@ from ..ape_x import actor
 from ..libs import replay_memory, utils
 
 class Actor(actor.Actor):
-    EPS_START = 1.0
-    EPS_END = 0.1
+    EPS_BASE = 0.4
+    EPS_ALPHA = 7.0
     def __init__(self, name, env, policy_net, target_net, vis, hostname='localhost',
                  batch_size=20, nstep_return=5, gamma=0.997,
                  clip=lambda x: x,
-                 target_update=400, eps_decay=20000,
+                 target_update=400, eps_decay=10000000,
                  device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         super(Actor, self).__init__(name, env, policy_net, vis, hostname,
                                     batch_size, nstep_return, gamma, clip,
@@ -38,7 +38,7 @@ class Actor(actor.Actor):
         for t in count():
             recurrent_state_buffer.append(self._policy_net.get_state())
             # Select and perform an action
-            eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
+            eps = self.EPS_BASE ** (1.0 + t / (self._eps_decay - 1.0) * self.EPS_ALPHA)
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())

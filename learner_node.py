@@ -42,7 +42,7 @@ def main():
                           use_memory_compress=True,
                           use_disk_cache=True)
         learner.optimize_loop(batch_size=batch_size, gamma=0.997**nstep_return,
-                              beta=0.6, target_update=2000,
+                              beta0=0.6, target_update=2000,
                               actor_device=torch.device(actordevice))
     else:
         raise ValueError('Unknown the algorithm: %s.' % args.algorithm)

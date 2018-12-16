@@ -20,15 +20,15 @@ class Actor(object):
         gamma (float, optional): discount factor
         clip (function, optional): reward clipping function
         target_update (int, optional): update frequency of the target network
-        eps_decay (int, optional): decay of random action rate in e-greedy
+        eps_decay (int, optional): Decay of random action rate in e-greedy
         device (torch.device, optional): calculation device
     """
-    EPS_START = 1.0
-    EPS_END = 0.1
+    EPS_BASE = 0.4
+    EPS_ALPHA = 7.0
     def __init__(self, name, env, policy_net, vis, hostname='localhost',
                  batch_size=50, nstep_return=3, gamma=0.999,
                  clip=lambda x: min(max(-1.0, x), 1.0),
-                 target_update=200, eps_decay=20000,
+                 target_update=200, eps_decay=10000000,
                  device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         self._env = env
         self._name = name
@@ -62,7 +62,7 @@ class Actor(object):
         n_episode = 0
         for t in count():
             # Select and perform an action
-            eps = self.EPS_END + (self.EPS_START - self.EPS_END) * np.exp(-1. * t / self._eps_decay)
+            eps = self.EPS_BASE ** (1.0 + t / (self._eps_decay - 1.0) * self.EPS_ALPHA)
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
