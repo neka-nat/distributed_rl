@@ -94,5 +94,5 @@ class Actor(object):
                                     utils.dumps((samples, prio.squeeze(1).cpu().numpy().tolist())))
                 self._local_memory.clear()
 
-            if t % self._target_update == 0:
+            if t > 0 and t % self._target_update == 0:
                 self._pull_params()
