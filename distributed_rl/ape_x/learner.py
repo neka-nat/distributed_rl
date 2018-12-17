@@ -49,17 +49,18 @@ class Learner(object):
         mlen = self._connect.llen('experience')
         time.sleep(0.01 * mlen)
 
-    def _wait_memory(self, batch_size):
+    def _wait_memory(self, memory_size):
         while True:
-            if len(self._memory) > batch_size:
+            if len(self._memory) > memory_size:
                 break
             time.sleep(0.1)
 
     def optimize_loop(self, batch_size=512, gamma=0.999**3,
                       beta0=0.4, max_grad_norm=40,
+                      start_memory_size=10000,
                       fit_timing=100, target_update=1000, actor_device=device,
                       save_timing=10000, save_model_dir='./models'):
-        self._wait_memory(batch_size)
+        self._wait_memory(start_memory_size)
         for t in count():
             transitions, prios, indices = self._memory.sample(batch_size)
             total = len(self._memory)
