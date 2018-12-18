@@ -39,7 +39,9 @@ class Learner(object):
         self._connect.delete('params')
         self._optimizer = optimizer
         self._win = self._vis.line(X=np.array([0]), Y=np.array([0]),
-                             opts=dict(title='Memory size'))
+                                   opts=dict(title='Memory size'))
+        self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0]),
+                                    opts=dict(title='Q loss'))
         self._memory = replay.Replay(replay_size, self._connect,
                                      use_compress=use_memory_compress,
                                      use_disk=use_disk_cache)
@@ -60,7 +62,7 @@ class Learner(object):
                       start_memory_size=10000,
                       fit_timing=100, target_update=1000, actor_device=device,
                       save_timing=10000, save_model_dir='./models'):
-        self._wait_memory(start_memory_size)
+        self._wait_memory(max(batch_size, start_memory_size))
         for t in count():
             transitions, prios, indices = self._memory.sample(batch_size)
             total = len(self._memory)
@@ -83,6 +85,9 @@ class Learner(object):
 
             self._connect.set('params', utils.dumps(self._policy_net.to(actor_device).state_dict()))
             self._policy_net.to(device)
+
+            self._vis.line(X=np.array([t]), Y=np.array([loss.detach().cpu().numpy()]),
+                           win=self._win2, update='append')
             if t % fit_timing == 0:
                 print('[Learner] Remove to fit.')
                 self._memory.remove_to_fit()

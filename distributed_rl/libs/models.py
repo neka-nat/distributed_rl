@@ -55,6 +55,7 @@ class DuelingLSTMDQN(nn.Module):
         self.batch_size = batch_size
         self.n_burn_in = n_burn_in
         self.nstep_return = nstep_return
+        self.input_shape = input_shape
         self.conv1 = nn.Conv2d(input_shape[0], 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
@@ -116,7 +117,8 @@ class DuelingLSTMDQN(nn.Module):
                         device=torch.device("cpu")):
         n_transitions = len(transitions)
         self_cp = DuelingLSTMDQN(self.n_action, self.batch_size,
-                                 self.n_burn_in, self.nstep_return).to(device)
+                                 self.n_burn_in, self.nstep_return,
+                                 self.input_shape).to(device)
         self_cp.load_state_dict(self.state_dict())
         self_cp.eval()
         batch = utils.Sequence(*zip(*transitions))
