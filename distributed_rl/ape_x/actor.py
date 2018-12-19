@@ -66,6 +66,7 @@ class Actor(object):
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())
+            sum_rwd += reward
             reward = torch.tensor([self._clip(reward)])
             done = torch.tensor([float(done)])
             step_buffer.append(utils.Transition(torch.from_numpy(state), action, reward,
@@ -76,7 +77,6 @@ class Actor(object):
                                                          step_buffer[-1].next_state, step_buffer[-1].done))
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
-            sum_rwd += reward.numpy()
             if done:
                 self._vis.line(X=np.array([n_episode]), Y=np.array([sum_rwd]),
                                win=self._win2, update='append')
