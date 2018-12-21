@@ -84,7 +84,7 @@ class Actor(object):
                 sum_rwd = 0
                 n_episode += 1
                 step_buffer.clear()
-            if len(self._local_memory) > self._batch_size:
+            if len(self._local_memory) >= self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 _, prio = self._policy_net.calc_priorities(self._policy_net, samples,
                                                            gamma=gamma_nsteps[-1],

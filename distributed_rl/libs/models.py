@@ -153,11 +153,12 @@ class DuelingLSTMDQN(nn.Module):
             action_batch = torch.stack(trans0.action).to(device)
             reward_batch = torch.stack(trans0.reward).to(device)
             next_state_batch = torch.stack(trans1.state).to(device)
+            done_batch = torch.stack(trans1.done).to(device)
 
             state_action_values = self.forward(state_batch).gather(1, action_batch)
             next_action = self_cp.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
             next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
-            expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) * gamma) + reward_batch)
+            expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) * gamma * (1.0 - done_batch)) + reward_batch)
             delta[t - self.n_burn_in] = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
 
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)

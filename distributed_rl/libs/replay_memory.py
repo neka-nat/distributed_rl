@@ -60,6 +60,9 @@ class ReplayMemory(object):
     def clear(self):
         self.memory.clear()
 
+    def __getitem__(self, idx):
+        return self.memory[idx]
+
     def __len__(self):
         return len(self.memory)
 
