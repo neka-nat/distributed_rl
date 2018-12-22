@@ -22,13 +22,11 @@ class Learner(object):
         hostname (str, optional): host name of redis server
         beta_decay (int, optional): Decay of annealing bias
         use_memory_compress (bool, optional): use the compressed replay memory for saved memory
-        use_disk_cache (bool, optional): use the disk cache to save experience
     """
     def __init__(self, policy_net, target_net, optimizer,
                  vis, replay_size=30000, hostname='localhost',
                  beta_decay = 1000000,
-                 use_memory_compress=False,
-                 use_disk_cache=False):
+                 use_memory_compress=False):
         self._vis = vis
         self._policy_net = policy_net
         self._target_net = target_net
@@ -43,8 +41,7 @@ class Learner(object):
         self._win2 = self._vis.line(X=np.array([0]), Y=np.array([0]),
                                     opts=dict(title='Q loss'))
         self._memory = replay.Replay(replay_size, self._connect,
-                                     use_compress=use_memory_compress,
-                                     use_disk=use_disk_cache)
+                                     use_compress=use_memory_compress)
         self._memory.start()
 
     def _sleep(self):

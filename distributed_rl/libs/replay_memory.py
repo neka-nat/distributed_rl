@@ -1,8 +1,7 @@
 import random
 from collections import deque
 import numpy as np
-from diskcache import Deque, Cache
-from . import utils, sumtree, lz4_disk
+from . import utils, sumtree
 
 class CompressedDeque(deque):
     def __init__(self, *args, **kargs):
@@ -21,15 +20,7 @@ class CompressedDeque(deque):
     def __getitem__(self, idx):
         return utils.loads(super(CompressedDeque, self).__getitem__(idx))
 
-def generate_deque(use_compress=False, use_disk=False, capacity=None):
-    if use_disk:
-        cache = Cache('/tmp/experience',
-                      disk=lz4_disk.Lz4Disk,
-                      size_limit=int(10e9),
-                      eviction_policy=u'least-frequently-used',
-                      sqlite_journal_mode='memory')
-        cache.clear()
-        return Deque.fromcache(cache)
+def generate_deque(use_compress=False, capacity=None):
     if use_compress:
         return CompressedDeque(maxlen=capacity)
     else:
@@ -37,12 +28,8 @@ def generate_deque(use_compress=False, use_disk=False, capacity=None):
 
 class ReplayMemory(object):
     def __init__(self, capacity,
-                 use_compress=False,
-                 use_disk=False):
-        if use_disk:
-            self.memory = generate_deque(use_compress, use_disk)
-        else:
-            self.memory = generate_deque(use_compress, use_disk, capacity)
+                 use_compress=False):
+        self.memory = generate_deque(use_compress, capacity)
 
     def push(self, data):
         """Saves a transition."""
@@ -63,10 +50,9 @@ class ReplayMemory(object):
 
 class PrioritizedMemory(object):
     def __init__(self, capacity,
-                 use_compress=False,
-                 use_disk=False):
+                 use_compress=False):
         self.capacity = capacity
-        self.transitions = generate_deque(use_compress, use_disk)
+        self.transitions = generate_deque(use_compress)
         self.priorities = sumtree.SumTree()
     
     def push(self, transitions, priorities):
