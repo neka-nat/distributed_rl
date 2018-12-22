@@ -2,44 +2,38 @@ import random
 from collections import deque
 import numpy as np
 from diskcache import Deque, Cache
-from . import utils, sumtree
+from . import utils, sumtree, lz4_disk
+
+class CompressedDeque(deque):
+    def __init__(self, *args, **kargs):
+        super(CompressedDeque, self).__init__(*args, **kargs)
+
+    def __iter__(self):
+        return (utils.loads(v) for v in super(CompressedDeque, self).__iter__())
+
+    def append(self, data):
+        super(CompressedDeque, self).append(utils.dumps(data))
+
+    def extend(self, datum):
+        for d in datum:
+            self.append(d)
+
+    def __getitem__(self, idx):
+        return utils.loads(super(CompressedDeque, self).__getitem__(idx))
 
 def generate_deque(use_compress=False, use_disk=False, capacity=None):
-    base_cls = deque if not use_disk else Deque
-    if not use_compress:
-        if capacity is None:
-            return base_cls()
-        else:
-            return base_cls(maxlen=capacity)
-
-    class CompressedDeque(base_cls):
-        def __init__(self, *args, **kargs):
-            super(CompressedDeque, self).__init__(*args, **kargs)
-
-        def __iter__(self):
-            return (utils.loads(v) for v in super(CompressedDeque, self).__iter__())
-
-        def append(self, data):
-            super(CompressedDeque, self).append(utils.dumps(data))
-
-        def extend(self, datum):
-            for d in datum:
-                self.append(d)
-
-        def __getitem__(self, idx):
-            return utils.loads(super(CompressedDeque, self).__getitem__(idx))
-
     if use_disk:
         cache = Cache('/tmp/experience',
+                      disk=lz4_disk.Lz4Disk,
                       size_limit=int(10e9),
                       eviction_policy=u'least-frequently-used',
                       sqlite_journal_mode='memory')
         cache.clear()
-        return CompressedDeque.fromcache(cache)
-    if capacity is None:
-        return CompressedDeque()
-    else:
+        return Deque.fromcache(cache)
+    if use_compress:
         return CompressedDeque(maxlen=capacity)
+    else:
+        return deque(maxlen=capacity)
 
 class ReplayMemory(object):
     def __init__(self, capacity,

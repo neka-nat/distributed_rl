@@ -39,7 +39,6 @@ def main():
                                                 nstep_return=nstep_return).to(device),
                           optim.Adam(model.parameters(), lr=1.0e-4, eps=1.0e-3),
                           vis, replay_size=args.replaysize, hostname=args.redisserver,
-                          use_memory_compress=True,
                           use_disk_cache=True)
         learner.optimize_loop(batch_size=batch_size, gamma=0.997**nstep_return,
                               beta0=0.6, target_update=2000,
