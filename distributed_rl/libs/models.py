@@ -127,7 +127,6 @@ class DuelingLSTMDQN(nn.Module):
         hx = torch.cat(batch.recurrent_state[0])
         cx = torch.cat(batch.recurrent_state[1])
         self.set_state((hx, cx), device)
-        self_cp.set_state((hx, cx), device)
         target_net.set_state((hx, cx), device)
 
         # burn-in
@@ -136,8 +135,8 @@ class DuelingLSTMDQN(nn.Module):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
                 state_batch = torch.stack(trans.state).to(device)
                 self.forward(state_batch)
-                self_cp.forward(state_batch)
                 target_net.forward(state_batch)
+            self_cp.set_state(self.get_state(), device)
             for t in range(self.n_burn_in, self.n_burn_in + self.nstep_return):
                 trans = utils.Transition(*zip(*(batch.transitions[t])))
                 state_batch = torch.stack(trans.state).to(device)
