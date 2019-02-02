@@ -48,12 +48,14 @@ class Actor(actor.Actor):
             step_buffer.append(utils.Transition(torch.from_numpy(state), action, reward, done=done))
             if len(step_buffer) == step_buffer.maxlen:
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])
-                sequence_buffer.append(utils.Transition(step_buffer[0].state, step_buffer[0].action, r_nstep, done=done))
+                sequence_buffer.append(utils.Transition(step_buffer[0].state,
+                                                        step_buffer[0].action, r_nstep, done=done))
             if done and len(self._local_memory) > 0:
                 n_add_overlap = n_total_sequence - len(sequence_buffer)
                 sequence_buffer = self._local_memory[-1].transitions[-n_add_overlap:] + sequence_buffer
             if len(sequence_buffer) == n_total_sequence:
-                self._local_memory.push(utils.Sequence(sequence_buffer, recurrent_state_buffer[-n_total_sequence]))
+                self._local_memory.push(utils.Sequence(sequence_buffer,
+                                                       recurrent_state_buffer[-n_total_sequence]))
                 sequence_buffer = sequence_buffer[-n_total_overlap:] if n_total_overlap > 0 else []
                 recurrent_state_buffer = recurrent_state_buffer[-n_total_sequence:]
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)

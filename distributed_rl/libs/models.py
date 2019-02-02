@@ -41,7 +41,8 @@ class DuelingDQN(nn.Module):
         state_action_values = self.forward(state_batch).gather(1, action_batch)
         next_action = self.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
         next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
-        expected_state_action_values = (next_state_values * gamma * (1.0 - done_batch)) + reward_batch
+        expected_state_action_values = (next_state_values * gamma * (1.0 - done_batch)) \
+                                       + reward_batch
         delta = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
         prios = (delta.abs() + 1e-5).pow(alpha)
         return delta, prios.detach()
@@ -144,7 +145,8 @@ class DuelingLSTMDQN(nn.Module):
                 target_net.forward(state_batch)
 
         n_sequence = len(batch.transitions)
-        delta = torch.zeros(n_sequence - self.n_burn_in - self.nstep_return, n_transitions, 1, device=device)
+        delta = torch.zeros(n_sequence - self.n_burn_in - self.nstep_return,
+                            n_transitions, 1, device=device)
         for t in range(self.n_burn_in, n_sequence - self.nstep_return):
             trans0 = utils.Transition(*zip(*(batch.transitions[t])))
             trans1 = utils.Transition(*zip(*(batch.transitions[t + self.nstep_return])))
@@ -157,8 +159,11 @@ class DuelingLSTMDQN(nn.Module):
             state_action_values = self.forward(state_batch).gather(1, action_batch)
             next_action = self_cp.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
             next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
-            expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) * gamma * (1.0 - done_batch)) + reward_batch)
-            delta[t - self.n_burn_in] = F.smooth_l1_loss(state_action_values, expected_state_action_values, reduce=False)
+            expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) \
+                                                          * gamma * (1.0 - done_batch)) + reward_batch)
+            delta[t - self.n_burn_in] = F.smooth_l1_loss(state_action_values,
+                                                         expected_state_action_values,
+                                                         reduce=False)
 
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)
         return delta.sum(dim=0), prios.detach()
