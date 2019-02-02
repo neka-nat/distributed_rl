@@ -55,7 +55,7 @@ def loads(packed):
 def rescale(x, eps=0.1):
     return x.sign() * ((x.abs() + 1.0).sqrt() - 1.0) + eps * x
 
-def inv_rescale(x, eps=0.1):
+def inv_rescale(x, eps=1.0e-3):
     if eps < 1.0e-6:
         return x.sign() * (x * x + 2.0 * x.abs())
     else:
