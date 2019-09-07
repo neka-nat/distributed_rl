@@ -52,7 +52,7 @@ def loads(packed):
     else:
         return cPickle.loads(packed)
 
-def rescale(x, eps=0.1):
+def rescale(x, eps=1.0e-3):
     return x.sign() * ((x.abs() + 1.0).sqrt() - 1.0) + eps * x
 
 def inv_rescale(x, eps=1.0e-3):
