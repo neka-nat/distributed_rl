@@ -50,9 +50,6 @@ class Actor(actor.Actor):
                 r_nstep = sum([gamma_nsteps[-(i + 2)] * step_buffer[i].reward for i in range(step_buffer.maxlen)])
                 sequence_buffer.append(utils.Transition(step_buffer[0].state,
                                                         step_buffer[0].action, r_nstep, done=done))
-            if done and len(self._local_memory) > 0:
-                n_add_overlap = n_total_sequence - len(sequence_buffer)
-                sequence_buffer = self._local_memory[-1].transitions[-n_add_overlap:] + sequence_buffer
             if len(sequence_buffer) == n_total_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer,
                                                        recurrent_state_buffer[-n_total_sequence]))
@@ -66,10 +63,6 @@ class Actor(actor.Actor):
                 state = self._env.reset()
                 sum_rwd = 0
                 n_episode += 1
-                step_buffer.clear()
-                sequence_buffer = []
-                recurrent_state_buffer = []
-                self._policy_net.reset(done)
             if len(self._local_memory) >= self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
                 recurrent_state = self._policy_net.get_state()
