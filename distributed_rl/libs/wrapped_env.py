@@ -9,8 +9,9 @@ class MultiFrameAtariEnv(AtariEnv):
     no_op_steps = 30
     def __init__(self, game='pong', obs_type='image', buf_size=4, gray=True,
                  frameskip=4, repeat_action_probability=0.):
-        super(MultiFrameAtariEnv, self).__init__(game, obs_type,
-                                                 frameskip, repeat_action_probability)
+        super(MultiFrameAtariEnv, self).__init__(game=game, obs_type=obs_type,
+                                                 frameskip=frameskip,
+                                                 repeat_action_probability=repeat_action_probability)
         self._cur_st = None
         self._nx_st = None
         self._img_buf = deque(maxlen=buf_size)
