@@ -56,10 +56,7 @@ def rescale(x, eps=1.0e-3):
     return x.sign() * ((x.abs() + 1.0).sqrt() - 1.0) + eps * x
 
 def inv_rescale(x, eps=1.0e-3):
-    if eps < 1.0e-6:
+    if eps == 0:
         return x.sign() * (x * x + 2.0 * x.abs())
     else:
-        eps2 = 2.0 * eps
-        eps21 = 2.0 * eps + 1.0
-        xabs = x.abs()
-        return x.sign() * (eps2 * xabs + eps21 - (2.0 * eps2 * xabs + eps21 * eps21).sqrt()) / (eps2 * eps)
+        return x.sign() * ((((1.0 + 4.0 * eps * (x.abs() + 1.0 + eps)).sqrt() - 1.0) / (2.0 * eps)).pow(2) - 1.0)

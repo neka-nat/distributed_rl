@@ -25,7 +25,7 @@ class Learner(object):
     """
     def __init__(self, policy_net, target_net, optimizer,
                  vis, replay_size=30000, hostname='localhost',
-                 beta_decay = 1000000,
+                 beta_decay=1000000,
                  use_memory_compress=False):
         self._vis = vis
         self._policy_net = policy_net

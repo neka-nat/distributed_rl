@@ -64,7 +64,7 @@ class DuelingLSTMDQN(nn.Module):
         c = int((int(input_shape[2] / 4) - 1) / 2) - 3
         self.lstm = nn.LSTMCell(r * c * 64, 512)
         self.adv1 = nn.Linear(512, 512)
-        self.adv2 = nn.Linear(512, self.n_action)
+        self.adv2 = nn.Linear(512, self.n_action, bias=False)
         self.val1 = nn.Linear(512, 512)
         self.val2 = nn.Linear(512, 1)
         self.hx = torch.zeros(self.batch_size, 512)
@@ -161,9 +161,9 @@ class DuelingLSTMDQN(nn.Module):
             next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
             expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) \
                                                           * gamma * (1.0 - done_batch)) + reward_batch)
-            delta[t - self.n_burn_in] = F.smooth_l1_loss(state_action_values,
-                                                         expected_state_action_values,
-                                                         reduce=False)
+            delta[t - self.n_burn_in] = F.l1_loss(state_action_values,
+                                                  expected_state_action_values,
+                                                  reduce=False)
 
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)
-        return delta.sum(dim=0), prios.detach()
+        return delta.pow(2).sum(dim=0), prios.detach()
