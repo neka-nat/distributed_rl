@@ -69,21 +69,12 @@ class DuelingLSTMDQN(nn.Module):
         self.val2 = nn.Linear(512, 1)
         self.hx = torch.zeros(self.batch_size, 512)
         self.cx = torch.zeros(self.batch_size, 512)
-        self._grad_mode = True
 
     def to(self, device):
         super(DuelingLSTMDQN, self).to(device)
         self.hx = self.hx.to(device)
         self.cx = self.cx.to(device)
         return self
-
-    def train(self, mode=True):
-        super(DuelingLSTMDQN, self).train(mode)
-        self._grad_mode = mode
-        return self
-
-    def eval(self):
-        return self.train(False)
 
     def reset(self, done=False):
         self.hx.detach_()
@@ -101,20 +92,20 @@ class DuelingLSTMDQN(nn.Module):
         self.cx = cx.to(device)
 
     def forward(self, x):
-        with torch.set_grad_enabled(self._grad_mode):
-            x = F.relu(self.conv1(x))
-            x = F.relu(self.conv2(x))
-            x = F.relu(self.conv3(x))
-            x = x.view(x.size(0), -1)
-            self.hx, self.cx = self.lstm(x, (self.hx, self.cx))
-            adv = F.relu(self.adv1(self.hx))
-            adv = self.adv2(adv)
-            val = F.relu(self.val1(self.hx))
-            val = self.val2(val)
-            return val + adv - adv.mean(1, keepdim=True)
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = x.view(x.size(0), -1)
+        self.hx, self.cx = self.lstm(x, (self.hx, self.cx))
+        adv = F.relu(self.adv1(self.hx))
+        adv = self.adv2(adv)
+        val = F.relu(self.val1(self.hx))
+        val = self.val2(val)
+        return val + adv - adv.mean(1, keepdim=True)
 
     def calc_priorities(self, target_net, transitions,
                         eta=0.9, gamma=0.997,
+                        require_grad=True,
                         device=torch.device("cpu")):
         n_transitions = len(transitions)
         self_cp = DuelingLSTMDQN(self.n_action, self.batch_size,
@@ -143,27 +134,29 @@ class DuelingLSTMDQN(nn.Module):
                 state_batch = torch.stack(trans.state).to(device)
                 self_cp.forward(state_batch)
                 target_net.forward(state_batch)
+        self.reset()
 
         n_sequence = len(batch.transitions)
         delta = torch.zeros(n_sequence - self.n_burn_in - self.nstep_return,
                             n_transitions, 1, device=device)
-        for t in range(self.n_burn_in, n_sequence - self.nstep_return):
-            trans0 = utils.Transition(*zip(*(batch.transitions[t])))
-            trans1 = utils.Transition(*zip(*(batch.transitions[t + self.nstep_return])))
-            state_batch = torch.stack(trans0.state).to(device)
-            action_batch = torch.stack(trans0.action).to(device)
-            reward_batch = torch.stack(trans0.reward).to(device)
-            next_state_batch = torch.stack(trans1.state).to(device)
-            done_batch = torch.stack(trans1.done).to(device)
+        with torch.set_grad_enabled(require_grad):
+            for t in range(self.n_burn_in, n_sequence - self.nstep_return):
+                trans0 = utils.Transition(*zip(*(batch.transitions[t])))
+                trans1 = utils.Transition(*zip(*(batch.transitions[t + self.nstep_return])))
+                state_batch = torch.stack(trans0.state).to(device)
+                action_batch = torch.stack(trans0.action).to(device)
+                reward_batch = torch.stack(trans0.reward).to(device)
+                next_state_batch = torch.stack(trans1.state).to(device)
+                done_batch = torch.stack(trans1.done).to(device)
 
-            state_action_values = self.forward(state_batch).gather(1, action_batch)
-            next_action = self_cp.forward(next_state_batch).argmax(dim=1).unsqueeze(1)
-            next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
-            expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) \
-                                                          * gamma * (1.0 - done_batch)) + reward_batch)
-            delta[t - self.n_burn_in] = F.l1_loss(state_action_values,
-                                                  expected_state_action_values,
-                                                  reduce=False)
+                state_action_values = self.forward(state_batch).gather(1, action_batch)
+                next_action = self_cp.forward(next_state_batch).argmax(dim=1).unsqueeze(1).detach()
+                next_state_values = target_net(next_state_batch).gather(1, next_action).detach()
+                expected_state_action_values = utils.rescale((utils.inv_rescale(next_state_values) \
+                                                              * gamma * (1.0 - done_batch)) + reward_batch)
+                delta[t - self.n_burn_in] = F.l1_loss(state_action_values,
+                                                      expected_state_action_values,
+                                                      reduce=False)
 
         prios = eta * delta.max(dim=0)[0] + (1.0 - eta) * delta.mean(dim=0)
         return delta.pow(2).sum(dim=0), prios.detach()

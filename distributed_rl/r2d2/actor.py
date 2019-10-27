@@ -68,6 +68,7 @@ class Actor(actor.Actor):
                 recurrent_state = self._policy_net.get_state()
                 _, prio = self._policy_net.calc_priorities(self._target_net, samples,
                                                            gamma=gamma_nsteps[-1],
+                                                           require_grad=False,
                                                            device=self._device)
                 self._policy_net.set_state(recurrent_state, self._device)
                 print("[%s] Publish experience." % self._name)
