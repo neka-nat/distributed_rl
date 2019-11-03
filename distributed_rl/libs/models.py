@@ -84,12 +84,12 @@ class DuelingLSTMDQN(nn.Module):
             self.cx.zero_()
 
     def get_state(self):
-        return self.hx.detach().cpu(), self.cx.detach().cpu()
+        return self.hx.detach().clone().cpu(), self.cx.detach().clone().cpu()
 
     def set_state(self, state, device):
         hx, cx = state
-        self.hx = hx.to(device)
-        self.cx = cx.to(device)
+        self.hx = hx.clone().to(device)
+        self.cx = cx.clone().to(device)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))

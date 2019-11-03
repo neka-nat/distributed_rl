@@ -23,7 +23,7 @@ class Actor(actor.Actor):
         self._target_net.eval()
         self._n_burn_in = self._policy_net.n_burn_in
 
-    def run(self, n_overlap=40, n_sequence=120):
+    def run(self, n_overlap=40, n_sequence=80):
         assert n_sequence > 1, "n_sequence must be more than 1."
         assert n_overlap < n_sequence, "n_overlap must be less than n_sequence."
         state = self._env.reset()
