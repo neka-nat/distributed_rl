@@ -52,9 +52,12 @@ class Actor(actor.Actor):
                                                         step_buffer[0].action, r_nstep, done=done))
             if len(sequence_buffer) == n_total_sequence:
                 self._local_memory.push(utils.Sequence(sequence_buffer,
-                                                       recurrent_state_buffer[-(n_total_sequence + step_buffer.maxlen - 1)]))
+                                                       recurrent_state_buffer[0]))
                 sequence_buffer = sequence_buffer[-n_total_overlap:] if n_total_overlap > 0 else []
                 recurrent_state_buffer = recurrent_state_buffer[-(n_total_overlap + step_buffer.maxlen - 1):] if n_total_overlap + step_buffer.maxlen - 1 > 0 else []
+            elif done and len(sequence_buffer) > n_total_overlap:
+                self._local_memory.push(utils.Sequence(sequence_buffer,
+                                                       recurrent_state_buffer[0]))
             self._vis.image(utils.preprocess(self._env.env._get_image()), win=self._win1)
             state = next_state.copy()
             if done:
@@ -62,6 +65,10 @@ class Actor(actor.Actor):
                                win=self._win2, update='append')
                 state = self._env.reset()
                 sum_rwd = 0
+                step_buffer.clear()
+                sequence_buffer = []
+                recurrent_state_buffer = []
+                self._policy_net.reset(done)
                 n_episode += 1
             if len(self._local_memory) >= self._batch_size:
                 samples = self._local_memory.sample(self._batch_size)
