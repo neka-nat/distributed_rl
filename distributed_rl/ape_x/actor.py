@@ -10,7 +10,7 @@ class Actor(object):
     """Actor of Ape-X
 
     Args:
-        name (str): name of the actor process's name
+        actor_no (int): number of the actor process
         env (gym.Env): Open AI gym environment object
         policy_net (torch.nn.Module): Q-function network
         vis (visdom.Visdom): visdom object
@@ -20,25 +20,26 @@ class Actor(object):
         gamma (float, optional): discount factor
         clip (function, optional): reward clipping function
         target_update (int, optional): update frequency of the target network
-        eps_decay (int, optional): Decay of random action rate in e-greedy
+        num_total_actors (int, optional): number of total actors
         device (torch.device, optional): calculation device
     """
     EPS_BASE = 0.4
     EPS_ALPHA = 7.0
-    def __init__(self, name, env, policy_net, vis, hostname='localhost',
+    def __init__(self, actor_no, env, policy_net, vis, hostname='localhost',
                  batch_size=50, nstep_return=3, gamma=0.999,
                  clip=lambda x: min(max(-1.0, x), 1.0),
-                 target_update=200, eps_decay=10000000,
+                 target_update=200, num_total_actors=4,
                  device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         self._env = env
-        self._name = name
+        self._actor_no = actor_no
+        self._name = "actor_" + str(actor_no)
         self._vis = vis
         self._batch_size = batch_size
         self._nstep_return = nstep_return
         self._gamma = gamma
         self._clip = clip
         self._target_update = target_update
-        self._eps_decay = eps_decay
+        self._num_total_actors = num_total_actors
         self._policy_net = policy_net
         self._policy_net.eval()
         self._device = device
@@ -62,7 +63,10 @@ class Actor(object):
         n_episode = 0
         for t in count():
             # Select and perform an action
-            eps = self.EPS_BASE ** (1.0 + t / (self._eps_decay - 1.0) * self.EPS_ALPHA)
+            if self._num_total_actors == 1:
+                eps = self.EPS_BASE
+            else:
+                eps = self.EPS_BASE ** (1.0 + (self._actor_no - 1.0) / (self._num_total_actors - 1.0) * self.EPS_ALPHA)
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())

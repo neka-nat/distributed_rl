@@ -10,14 +10,14 @@ from ..libs import replay_memory, utils
 class Actor(actor.Actor):
     EPS_BASE = 0.4
     EPS_ALPHA = 7.0
-    def __init__(self, name, env, policy_net, target_net, vis, hostname='localhost',
+    def __init__(self, actor_no, env, policy_net, target_net, vis, hostname='localhost',
                  batch_size=20, nstep_return=5, gamma=0.997,
                  clip=lambda x: x,
-                 target_update=400, eps_decay=10000000,
+                 target_update=400, num_total_actors=4,
                  device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
-        super(Actor, self).__init__(name, env, policy_net, vis, hostname,
+        super(Actor, self).__init__(actor_no, env, policy_net, vis, hostname,
                                     batch_size, nstep_return, gamma, clip,
-                                    target_update, eps_decay, device)
+                                    target_update, num_total_actors, device)
         self._target_net = target_net
         self._target_net.load_state_dict(self._policy_net.state_dict())
         self._target_net.eval()
@@ -38,7 +38,10 @@ class Actor(actor.Actor):
         for t in count():
             recurrent_state_buffer.append(self._policy_net.get_state())
             # Select and perform an action
-            eps = self.EPS_BASE ** (1.0 + t / (self._eps_decay - 1.0) * self.EPS_ALPHA)
+            if self._num_total_actors == 1:
+                eps = self.EPS_BASE
+            else:
+                eps = self.EPS_BASE ** (1.0 + (self._actor_no - 1.0) / (self._num_total_actors - 1.0) * self.EPS_ALPHA)
             action = utils.epsilon_greedy(torch.from_numpy(state).unsqueeze(0).to(self._device),
                                           self._policy_net, eps)
             next_state, reward, done, _ = self._env.step(action.item())

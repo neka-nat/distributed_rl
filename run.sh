@@ -36,7 +36,7 @@ fi
 if $actor; then
     for i in `seq $1`
     do
-	python actor_node.py -n actor_$i -r $redis_server -v $visdom_server -a $algorithm &
+	python actor_node.py -n $i -t $1 -r $redis_server -v $visdom_server -a $algorithm &
 	pids="$pids $!"
     done
 fi
