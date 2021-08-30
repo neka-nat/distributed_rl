@@ -21,10 +21,9 @@ and these processes communicate using Redis.
 ## Install
 
 ```
-sudo pip install pipenv
 git clone https://github.com/neka-nat/distributed_rl.git
 cd distributed_rl
-pipenv install
+poetry install
 ```
 
 Install redis-server.
@@ -33,12 +32,15 @@ Install redis-server.
 sudo apt-get install redis-server
 ```
 
+Setting Atari.
+https://github.com/openai/atari-py#roms
+
 ## Run
 The following command is running all actors and learner in localhost.
 The number of actor's processes is given as an argument.
 
 ```
-pipenv shell
+poetry shell
 ./run.sh 4
 ```
 
