@@ -1,8 +1,21 @@
-FROM pytorch/pytorch:0.4.1-cuda9-cudnn7-devel
-RUN apt-get -y update && apt-get -y install redis-server
-RUN pip install gym redis pillow atari-py visdom lz4
+FROM nvidia/cuda:11.4.2-cudnn8-devel-ubuntu20.04
 
-RUN git clone https://github.com/neka-nat/distributed_rl.git
-COPY config/redis.conf /etc/redis/
 WORKDIR /workspace/distributed_rl
-ENTRYPOINT /etc/init.d/redis-server start && /bin/bash
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y update \
+    && apt-get -y --no-install-recommends install curl redis cmake zlib1g-dev python3 python3-pip python3.8-venv \
+    && rm --recursive --force /var/lib/apt/lists/*
+
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+COPY . .
+ENV PATH $PATH:/root/.local/bin
+
+RUN poetry config virtualenvs.create false \
+    && poetry run pip install -U pip \
+    && apt purge -y python3-pip \
+    && poetry install
+RUN cp config/redis.conf /etc/redis/.
+
+ENTRYPOINT /bin/bash

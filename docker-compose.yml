@@ -1,0 +1,39 @@
+version: '3'
+
+networks:
+  redis:
+    driver: bridge
+
+services:
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./data/redis:/data"
+    networks:
+      - redis
+    restart: always
+  app:
+    image: distributed_rl:latest
+    depends_on:
+      - redis
+    build: .
+    container_name: distributed_rl_node
+    command: ./run.sh 4
+    environment:
+      - "DISPLAY=${DISPLAY}"
+      - "NVIDIA_VISIBLE_DEVICES=all"
+      - "NVIDIA_DRIVER_CAPABILITIES=all"
+    volumes:
+      - ./:/cakin_ws
+      - /dev:/dev
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    networks:
+      - redis
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - capabilities: [gpu]

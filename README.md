@@ -54,7 +54,7 @@ Run r2d2 mode.
 
 ```
 cd distributed_rl
-docker build -t distributed_rl:1.0 .
+docker-compose up -d
 ```
 
 ## Use AWS

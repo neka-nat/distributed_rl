@@ -1,0 +1,7 @@
+*.png
+dist
+build
+*egg-info
+.vscode
+.venv
+__pycache__
