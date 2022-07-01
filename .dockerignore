@@ -5,3 +5,5 @@ build
 .vscode
 .venv
 __pycache__
+*.bin
+roms
