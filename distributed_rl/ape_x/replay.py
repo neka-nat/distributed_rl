@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-import time
 import threading
+import time
+
 import redis
-from ..libs import utils, replay_memory
+
+from ..libs import replay_memory, utils
+
 
 class Replay(threading.Thread):
     """Replay of Ape-X
@@ -12,20 +15,20 @@ class Replay(threading.Thread):
         connect (redis.StrictRedis, optional): Redis client object
         use_compress (bool, optional): use the compressed memory for saved memory
     """
-    def __init__(self, size=50000, connect=redis.StrictRedis(host='localhost'),
-                 use_compress=False):
+
+    def __init__(self, size=50000, connect=redis.StrictRedis(host="localhost"), use_compress=False):
         super(Replay, self).__init__()
         self.setDaemon(True)
         self._memory = replay_memory.PrioritizedMemory(size, use_compress)
         self._connect = connect
-        self._connect.delete('experience')
+        self._connect.delete("experience")
         self._lock = threading.Lock()
 
     def run(self):
         while True:
             pipe = self._connect.pipeline()
-            pipe.lrange('experience', 0, -1)
-            pipe.ltrim('experience', -1, 0)
+            pipe.lrange("experience", 0, -1)
+            pipe.ltrim("experience", -1, 0)
             data = pipe.execute()[0]
             if not data is None:
                 for d in data:

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Node(object):
     def __init__(self, value=0.0, left=None, right=None, op=sum):
         self.value = value
@@ -87,8 +88,7 @@ class TreeQueue(object):
         ixl, ixr = self.bounds
         root = self.root
         if ixr == self.length:
-            self.root = Node(root.value, self.root, Node(op=self.op),
-                             op=self.op)
+            self.root = Node(root.value, self.root, Node(op=self.op), op=self.op)
             ixr += ixr - ixl
             self.bounds = (ixl, ixr)
         ret = self._write(self.length, value)
@@ -119,6 +119,7 @@ class TreeQueue(object):
 
     def __len__(self):
         return self.length
+
 
 class SumTree(TreeQueue):
     def __init__(self):

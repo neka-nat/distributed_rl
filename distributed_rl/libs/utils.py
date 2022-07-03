@@ -1,27 +1,36 @@
-import sys
 import random
+import sys
 from collections import namedtuple
+
 import numpy as np
 from PIL import Image
+
 if sys.version_info.major == 3:
     import _pickle as cPickle
 else:
     import cPickle
-import torch
+
 import lz4.frame
+import torch
+
 _USE_COMPRESS = True
 
-class Transition(namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))):
+
+class Transition(namedtuple("Transition", ("state", "action", "reward", "next_state", "done"))):
     __slots__ = ()
+
     def __new__(cls, state, action, reward, next_state=None, done=None):
         return super(Transition, cls).__new__(cls, state, action, reward, next_state, done)
 
-Sequence = namedtuple('Sequence', ('transitions', 'recurrent_state'))
+
+Sequence = namedtuple("Sequence", ("transitions", "recurrent_state"))
 
 _outsize = lambda x, f, p, s: int(x - f + 2 * p) / s + 1
 
+
 def outsize(x, f, p=0, s=1):
     return (_outsize(x[0], f, p, s), _outsize(x[1], f, p, s))
+
 
 def preprocess(img, shape=None, gray=False):
     pil_img = Image.fromarray(img)
@@ -33,6 +42,7 @@ def preprocess(img, shape=None, gray=False):
         img_ary = np.asarray(pil_img).transpose((2, 0, 1))
     return np.ascontiguousarray(img_ary, dtype=np.float32) / 255
 
+
 def epsilon_greedy(state, policy_net, eps=0.1):
     if random.random() > eps:
         with torch.no_grad():
@@ -40,11 +50,13 @@ def epsilon_greedy(state, policy_net, eps=0.1):
     else:
         return torch.tensor([random.randrange(policy_net.n_action)], dtype=torch.long)
 
+
 def dumps(data):
     if _USE_COMPRESS:
         return lz4.frame.compress(cPickle.dumps(data))
     else:
         return cPickle.dumps(data)
+
 
 def loads(packed):
     if _USE_COMPRESS:
@@ -52,8 +64,10 @@ def loads(packed):
     else:
         return cPickle.loads(packed)
 
+
 def rescale(x, eps=1.0e-3):
     return x.sign() * ((x.abs() + 1.0).sqrt() - 1.0) + eps * x
+
 
 def inv_rescale(x, eps=1.0e-3):
     if eps == 0:
