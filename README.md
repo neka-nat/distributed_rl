@@ -57,36 +57,13 @@ cd distributed_rl
 docker-compose up -d
 ```
 
-## Use AWS
+## Use EKS
 
-Create AMI.
-
-```
-packer build packer/ubuntu.json
-```
-
-Create key-pair.
+Create EKS resource.
 
 ```
-aws ec2 create-key-pair --key-name key --query 'KeyMaterial' --output text > ~/.ssh/key.pem
-chmod 400 ~/.ssh/key.pem
-```
-
-Run instances.
-
-```
-cd aws
-python aws_run_instances.py aws_config.yaml
-```
-
-Run fabric for a learner.
-
-```
-fab -H <Public IP of learner's instance> -u ubuntu -i ~/.ssh/key.pem learner_run
-```
-
-Run fabric for actors.
-
-```
-fab -H <Public IP of actor's instance 1>,<Public IP of actor's instance 2>, ... -u ubuntu -i ~/.ssh/key.pem actor_run:num_proc=15,leaner_host=<Public IP of learner's instance>
+cd terraform
+terraform init
+terraform plan
+terraform apply
 ```

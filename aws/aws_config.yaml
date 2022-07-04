@@ -1,6 +1,0 @@
-learner_instance_type: p2.xlarge
-actors_instance_type: t2.2xlarge
-num_actors_instance: 5
-num_actors_process_for_each_instance: 15
-key_name: key
-ssh_key_file: ~/.ssh/key.pem

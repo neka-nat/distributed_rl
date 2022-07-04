@@ -3,3 +3,4 @@
 *.rdb
 *.pth
 roms
+.terraform*
